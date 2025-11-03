@@ -1,0 +1,36 @@
+USUARIO
+
+	- Registro
+	- Confirmar email
+	- Inicio de sesión
+	- Cerrar sesión
+	- Recuperar contraseña
+
+DASHBOARD
+
+	- Cargar reservas
+	- Cargar notificaciones
+	- Funcionalidad de búsqueda (Aparición de sitio)
+
+RESERVA
+
+	- Seleccionar sitio
+	- Seleccionar recurso
+	- Seleccionar horario
+	- Concretar reserva
+	- Cargar todas las reservas
+	- Historial de reservas
+	- Cancelar reserva
+
+SITIO
+
+	- Registrar sitio (Subir toda la información al respecto)
+	- Cargar estadísticas del sitio
+	- Ver reservas actuales
+
+GRUPO
+
+	- Crear grupo
+	- Invitar a grupo
+	- Ver grupos
+	- Ver integrantes
