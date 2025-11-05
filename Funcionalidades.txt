@@ -1,3 +1,5 @@
+Funcionalidades principales identificadas por el momento
+
 USUARIO
 
 	- Registro
