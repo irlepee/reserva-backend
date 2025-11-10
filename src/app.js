@@ -10,4 +10,7 @@ app.use('/auth', authRoutes);
 const sitesRoutes = require('./routes/sites');
 app.use('/sites', sitesRoutes);
 
+const groupsRoutes = require('./routes/groups');
+app.use('/groups', groupsRoutes);
+
 module.exports = app;

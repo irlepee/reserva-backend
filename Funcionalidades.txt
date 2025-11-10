@@ -2,9 +2,9 @@ Funcionalidades principales identificadas por el momento
 
 USUARIO
 
-	- Registro
+	- Registro --
 	- Confirmar email
-	- Inicio de sesión
+	- Inicio de sesión --
 	- Cerrar sesión
 	- Recuperar contraseña
 
@@ -26,13 +26,13 @@ RESERVA
 
 SITIO
 
-	- Registrar sitio (Subir toda la información al respecto)
-	- Cargar estadísticas del sitio
+	- Registrar sitio (Subir toda la información al respecto) --
+	- Cargar estadísticas del sitio 
 	- Ver reservas actuales
 
 GRUPO
 
-	- Crear grupo
+	- Crear grupo 
 	- Invitar a grupo
 	- Ver grupos
 	- Ver integrantes

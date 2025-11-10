@@ -1,0 +1,13 @@
+//login
+
+{
+  "username": "irlepe",
+  "email": "",
+  "password": "123456"
+}
+
+// crear grupo
+
+{
+  "name": "Grupo de prueba",
+}

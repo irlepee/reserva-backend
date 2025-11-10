@@ -3,7 +3,7 @@ const router = express.Router();
 const sitesController = require('../controllers/sitesController');
 const authMiddleware = require('../middleware/authMiddleware');
 
-router.get('/get', authMiddleware.jwtauthenticator , sitesController.getSites);
+router.get('/', authMiddleware.jwtauthenticator , sitesController.getSites);
 router.post('/create', authMiddleware.jwtauthenticator , sitesController.create);
 
 module.exports = router;
