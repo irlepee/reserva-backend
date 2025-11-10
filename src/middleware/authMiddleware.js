@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const secret = process.env.JWT_SECRET
 
-function authMiddleware(req, res, next) {
+function jwtauthenticator(req, res, next) {
     //Obtener el token del header Authorization
     const authHeader = req.headers['authorization'];
     if (!authHeader) {
@@ -26,4 +26,4 @@ function authMiddleware(req, res, next) {
     }
 }
 
-module.exports = authMiddleware
+module.exports = { jwtauthenticator };

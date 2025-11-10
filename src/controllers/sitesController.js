@@ -11,4 +11,13 @@ async function create(req, res) {
     }
 }
 
-module.exports = { create }
+async function getSites(req, res) {
+    try {
+        const sites = await sitesService.getMySites(req.user.userId); //La propiedad del jwt se llama userId, es importante
+        res.status(200).json(sites);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { create, getSites }

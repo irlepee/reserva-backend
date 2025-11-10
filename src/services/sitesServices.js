@@ -7,8 +7,7 @@ async function createSite(siteData) {
             id_owner: siteData.id_owner,
             name: siteData.name,
             description: siteData.description,
-            date_created: new Date(),
-            id_estado: siteData.id_estado,
+            id_entidad: siteData.id_entidad,
             id_municipio: siteData.id_municipio,
             id_localidad: siteData.id_localidad,
         },
@@ -22,4 +21,18 @@ async function createSite(siteData) {
     return safeSite;
 }
 
-module.exports = { createSite };
+async function getMySites(userId) {
+    const sites = await prisma.Site.findMany({
+        where: {
+            id_owner: BigInt(userId) // <- aquí convertimos a BigInt
+        }
+    });
+
+    // Convertimos id_owner a Number antes de enviar al frontend
+    return sites.map(site => ({
+        ...site,
+        id_owner: Number(site.id_owner)
+    }));
+}
+
+module.exports = { createSite, getMySites };
