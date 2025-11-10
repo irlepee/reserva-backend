@@ -23,7 +23,7 @@ async function registerUser(data) {
     const hashedPassword = await hashPassword(password);
 
     //Crear el usuario
-    const newUser = await prisma.user.create({
+    const newUser = await prisma.User.create({
         data: {
             username,
             name,
@@ -58,7 +58,7 @@ async function registerUser(data) {
 }
 
 async function loginUser(username, email, password) {
-    const user = await prisma.user.findFirst({
+    const user = await prisma.User.findFirst({
         where: {
             OR: [{ email }, { username }]
         },

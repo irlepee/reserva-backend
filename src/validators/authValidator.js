@@ -6,7 +6,7 @@ const registerSchema = z.object({
   lastname: z.string().max(50).optional(),
   age: z.number().int().positive().max(100).optional(),
   gender: z.string().max(1).optional(),
-  email: z.string().z.email('Correo electrónico inválido'),
+  email: z.string().email('Correo electrónico inválido'),
   password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
   id_estado: z.number().int().optional(),
   id_municipio: z.number().int().optional(),
