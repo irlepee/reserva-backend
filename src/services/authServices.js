@@ -1,15 +1,14 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
-const { hashPassword } = require('../utils/hash');
+const { hashPassword, comparePassword } = require('../utils/hash');
 const jwt = require('jsonwebtoken');
 
 async function registerUser(data) {
 
-    const { username, name, lastname, age, gender, email, password, id_estado, id_municipio, id_localidad } = data;
-
+    const { username, name, lastname, age, gender, email, password, id_entidad, id_municipio, id_localidad } = data;
 
     //Verificar si el email o el username ya existen
-    const existingUser = await prisma.user.findFirst({
+    const existingUser = await prisma.User.findFirst({
         where: {
             OR: [{ email }, { username }]
         },
@@ -32,7 +31,7 @@ async function registerUser(data) {
             gender,
             email,
             password: hashedPassword,
-            id_estado,
+            id_entidad,
             id_municipio,
             id_localidad,
         },
@@ -57,7 +56,13 @@ async function registerUser(data) {
 
 }
 
+
+//OPCIONALMENTE ACÁ PODEMOS HACER QUE EL USERNAME Y EL EMAIL SEAN LO MISMO
+//INGRESAS UNO DE LOS 2 EN LA MISMA VARIABLE, Y ESA VARIABLE SE BUSCA EN AMBOS CAMPOS
+//COMO ESTÁ ACTUALMENTE HACES QUE EN EL FRONTEND SE HAGA UNA DISTINCIÓN ENTRE AMBOS
+//PARA PODER COLOCARLO EN UN CAMPO O EN EL OTRO
 async function loginUser(username, email, password) {
+
     const user = await prisma.User.findFirst({
         where: {
             OR: [{ email }, { username }]
@@ -74,10 +79,12 @@ async function loginUser(username, email, password) {
     }
 
     const token = jwt.sign(
-        { userId: user.id, email: user.email },
-        JWT_SECET = process.env.JWT_SECRET,
+        { userId: Number(user.id), email: user.email },
+        process.env.JWT_SECRET,
         { expiresIn: '1h' }
     );
+
+    console.log('User logged in:', user.id);
 
     return {
         token,
@@ -92,4 +99,4 @@ async function loginUser(username, email, password) {
 }
 
 
-module.exports = { registerUser,loginUser };
+module.exports = { registerUser, loginUser };
