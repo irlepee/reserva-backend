@@ -33,11 +33,10 @@ async function edit(req, res) {
 }
 
 async function deleteG(req, res) {
-    console.log("Deleting group...");
     try {
         const groupId = parseInt(req.params.groupId);
-        await groupService.deleteGroup(groupId, req.user.userId);
-        res.status(204).send();
+        const result = await groupService.deleteGroup(groupId, req.user.userId);
+        res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

@@ -15,9 +15,29 @@ async function create(req, res) {
         const newSite = await sitesService.createSite(siteData, req.user.userId);
         res.status(201).json(newSite);
     } catch (error) {
-        console.error(error);  // para ver el error completo en la terminal
         res.status(500).json({ error: error.message });
     }
 }
 
-module.exports = { create, getSites }
+async function edit(req, res) {
+    try {
+        const siteId = parseInt(req.params.siteId);
+        const siteData = req.body;
+        const updateSite = await sitesService.editSite(siteId, siteData, req.user.userId);
+        res.status(200).json(updateSite);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+async function deleteS(req, res) {
+    try {
+        const siteId = parseInt(req.params.siteId);
+        const result = await sitesService.deleteSite(siteId, req.user.userId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { create, getSites, edit, deleteS }

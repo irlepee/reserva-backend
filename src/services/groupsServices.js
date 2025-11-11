@@ -53,15 +53,11 @@ async function editGroup(groupId, groupData, userId) {
 
 async function deleteGroup(groupId, userId) {
 
-    console.log("1");
-
     await isOwnedByUser(groupId, userId);
 
     await prisma.Group.delete({
         where: { id: groupId }
     });
-
-    console.log("2");
 
     return { message: 'Group deleted successfully' };
 }
