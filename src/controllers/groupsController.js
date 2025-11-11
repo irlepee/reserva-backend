@@ -1,3 +1,4 @@
+const { ca } = require('zod/locales');
 const groupService = require('../services/groupsServices');
 
 async function getGroups(req, res) {
@@ -20,4 +21,26 @@ async function create(req, res) {
     }
 }
 
-module.exports = { getGroups, create }
+async function edit(req, res) {
+    try {
+        const groupId = parseInt(req.params.groupId);
+        const groupData = req.body;
+        const updatedGroup = await groupService.editGroup(groupId, groupData, req.user.userId);
+        res.status(200).json(updatedGroup);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+async function deleteG(req, res) {
+    console.log("Deleting group...");
+    try {
+        const groupId = parseInt(req.params.groupId);
+        await groupService.deleteGroup(groupId, req.user.userId);
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { getGroups, create, edit, deleteG }
