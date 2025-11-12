@@ -1,4 +1,4 @@
-const { ca } = require('zod/locales');
+//const { ca } = require('zod/locales');
 const groupService = require('../services/groupsServices');
 
 async function getGroups(req, res) {

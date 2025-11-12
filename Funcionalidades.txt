@@ -5,14 +5,13 @@ USUARIO
 	- Registro --
 	- Confirmar email
 	- Inicio de sesión --
-	- Cerrar sesión
+	- Cerrar sesión -- Frontend
 	- Recuperar contraseña
 
-DASHBOARD
+NOTIFICACIONES
 
-	- Cargar reservas
-	- Cargar notificaciones
-	- Funcionalidad de búsqueda (Aparición de sitio)
+	- Tipos de notificaciones
+	- Hacerlas funcionar
 
 RESERVA
 
@@ -26,13 +25,29 @@ RESERVA
 
 SITIO
 
+	- Ver sitios --
 	- Registrar sitio (Subir toda la información al respecto) --
+	- Editar sitio --
+	- Eliminar sitio --
 	- Cargar estadísticas del sitio 
-	- Ver reservas actuales
+	- Ver reservas actuales 
+
+	(Revisar carga de imágenes)
+
+RECURSO
+
+	- Ver recurso --
+	- Crear recurso --
+	- Editar recurso --
+	- Eliminar recurso --
+	- Tipo de recurso --
+	- Registra recurso en el sitio --
 
 GRUPO
 
-	- Crear grupo 
+	- Ver grupos --
+	- Crear grupo --
+	- Editar grupo --
+	- Eliminar grupo --
 	- Invitar a grupo
-	- Ver grupos
 	- Ver integrantes

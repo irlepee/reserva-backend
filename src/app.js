@@ -10,6 +10,9 @@ app.use('/auth', authRoutes);
 const sitesRoutes = require('./routes/sites');
 app.use('/sites', sitesRoutes);
 
+const resourcesRoutes = require('./routes/resources');
+app.use('/sites', resourcesRoutes);
+
 const groupsRoutes = require('./routes/groups');
 app.use('/groups', groupsRoutes);
 
