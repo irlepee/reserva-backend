@@ -7,5 +7,6 @@ const { jwt } = require('zod');
 Router.get('/', authMiddleware.jwtauthenticator, reservasController.getAllReservas);
 Router.post('/', authMiddleware.jwtauthenticator, reservasController.create);
 Router.delete('/:id', authMiddleware.jwtauthenticator, reservasController.cancel);
+Router.get('/history', authMiddleware.jwtauthenticator, reservasController.history)
 
 module.exports = Router;

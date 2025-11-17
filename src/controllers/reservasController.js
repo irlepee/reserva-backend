@@ -29,4 +29,13 @@ async function cancel(req, res) {
     }
 }
 
-module.exports = { getAllReservas, create, cancel }
+async function history(req, res) {
+    try {
+        const history = await reservasServices.reservasHistory(req.user.userId);
+        res.status(200).json(history);
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
+module.exports = { getAllReservas, create, cancel, history }
