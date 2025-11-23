@@ -26,4 +26,7 @@ app.use('/groups', groupsRoutes);
 const reservasRoutes = require('./routes/reservas');
 app.use('/reservas', reservasRoutes);
 
+const locationsRoutes = require('./routes/locations');
+app.use('/', locationsRoutes);
+
 module.exports = app;
