@@ -1,7 +1,14 @@
 const express = require('express');
+const cors = require('cors')
 
 const app = express();
+
 app.use(express.json());
+app.use(cors());
+
+app.get('/ping', (req, res) => {
+    res.json({ message: 'pong' });
+});
 
 //Rutas
 const authRoutes = require('./routes/auth');

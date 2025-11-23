@@ -61,11 +61,12 @@ async function registerUser(data) {
 //INGRESAS UNO DE LOS 2 EN LA MISMA VARIABLE, Y ESA VARIABLE SE BUSCA EN AMBOS CAMPOS
 //COMO ESTÁ ACTUALMENTE HACES QUE EN EL FRONTEND SE HAGA UNA DISTINCIÓN ENTRE AMBOS
 //PARA PODER COLOCARLO EN UN CAMPO O EN EL OTRO
-async function loginUser(username, email, password) {
+async function loginUser(identifier, password) {
 
     const user = await prisma.User.findFirst({
         where: {
-            OR: [{ email }, { username }]
+            OR: [{ username: identifier },
+                { email: identifier }]
         },
     });
 
@@ -83,8 +84,6 @@ async function loginUser(username, email, password) {
         process.env.JWT_SECRET,
         { expiresIn: '24h' }
     );
-
-    console.log('User logged in:', user.id);
 
     return {
         token,
