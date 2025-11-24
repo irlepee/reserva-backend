@@ -1,6 +1,14 @@
 const authService = require('../services/authServices');
 const { validateRegister } = require('../validators/authValidator');
 
+async function getUser(req, res) {
+    try {
+        res.status(200).json(req.user);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
 async function register(req, res) {
     try {
         console.log(req.body);
