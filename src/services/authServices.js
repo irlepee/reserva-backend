@@ -3,6 +3,15 @@ const prisma = new PrismaClient();
 const { hashPassword, comparePassword } = require('../utils/hash');
 const jwt = require('jsonwebtoken');
 
+async function getUser(userId) {
+    const user = await prisma.User.findUnique({
+        where: { id: userId },
+    });
+
+    safeUser = { ...user, id: Number(user.id) };
+    return safeUser;
+}
+
 async function registerUser(data) {
 
     const { username, name, lastname, age, gender, email, password, id_entidad, id_municipio, id_localidad } = data;
@@ -107,4 +116,4 @@ async function loginUser(identifier, password) {
 }
 
 
-module.exports = { registerUser, loginUser };
+module.exports = { registerUser, loginUser, getUser };

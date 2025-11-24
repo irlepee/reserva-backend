@@ -3,9 +3,10 @@ const { validateRegister } = require('../validators/authValidator');
 
 async function getUser(req, res) {
     try {
-        res.status(200).json(req.user);
+        const user = await authService.getUser(req.user.userId);
+        res.status(200).json(user);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        res.status(400).json({ succes: false, error: error.message || "Ocurrio un error inesperado" });
     }
 }
 
