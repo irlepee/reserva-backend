@@ -7,15 +7,24 @@ async function registerUser(data) {
 
     const { username, name, lastname, age, gender, email, password, id_entidad, id_municipio, id_localidad } = data;
 
-    //Verificar si el email o el username ya existen
     const existingUser = await prisma.User.findFirst({
         where: {
-            OR: [{ email }, { username }]
+            username
         },
     });
 
     if (existingUser) {
-        throw new Error('Username or email already exists');
+        throw new Error('El nombre de usuario ya existe');
+    }
+
+    const existingEmail = await prisma.User.findFirst({
+        where: {
+            email
+        },
+    });
+
+    if (existingEmail) {
+        throw new Error('El correo electrónico ya existe');
     }
 
     //Hashear la contraseña
@@ -66,7 +75,7 @@ async function loginUser(identifier, password) {
     const user = await prisma.User.findFirst({
         where: {
             OR: [{ username: identifier },
-                { email: identifier }]
+            { email: identifier }]
         },
     });
 
