@@ -120,6 +120,66 @@ function validateHour(dateString) {
     return d;
 }
 
+async function topReservedSites(userId) {
+    const now = new Date();
+
+    // Fechas de referencia
+    const weekAgo = new Date();
+    weekAgo.setDate(now.getDate() - 7);
+
+    const monthAgo = new Date();
+    monthAgo.setMonth(now.getMonth() - 1);
+
+    // --- RESERVAS SEMANA ---
+    const weekReservations = await prisma.Reserva.findMany({
+        where: {
+            id_owner: BigInt(userId),
+            start_date: { gte: weekAgo }
+        },
+        select: { id_resource: true }
+    });
+
+    // --- RESERVAS MES ---
+    const monthReservations = await prisma.Reserva.findMany({
+        where: {
+            id_owner: BigInt(userId),
+            start_date: { gte: monthAgo }
+        },
+        select: { id_resource: true }
+    });
+
+    // Obtener todos los recursos usados en semana y mes
+    const allResourceIds = [
+        ...weekReservations.map(r => r.id_resource),
+        ...monthReservations.map(r => r.id_resource)
+    ];
+    const resources = await prisma.Resource.findMany({
+        where: { id: { in: allResourceIds } },
+        select: { id: true, id_site: true }
+    });
+
+    // Mapear id_resource → id_site
+    const resourceToSite = new Map(resources.map(r => [r.id, r.id_site]));
+
+    // Contar repeticiones por sitio
+    function countTop(reservations) {
+        const siteCount = {};
+        reservations.forEach(r => {
+            const siteId = resourceToSite.get(r.id_resource);
+            if (siteId != null) {
+                siteCount[siteId] = (siteCount[siteId] || 0) + 1;
+            }
+        });
+        const topEntry = Object.entries(siteCount).sort((a, b) => b[1] - a[1])[0];
+        return topEntry ? { id_site: Number(topEntry[0]), count: topEntry[1] } : null;
+    }
+
+    return {
+        week: countTop(weekReservations),
+        month: countTop(monthReservations)
+    };
+}
 
 
-module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory }
+
+module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory, topReservedSites }

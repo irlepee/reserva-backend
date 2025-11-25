@@ -38,4 +38,13 @@ async function history(req, res) {
     }
 }
 
-module.exports = { getAllReservas, create, cancel, history }
+async function topSites(req, res) {
+    try {
+        const result = await reservasServices.topReservedSites(req.user.userId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message })
+    }
+}
+
+module.exports = { getAllReservas, create, cancel, history, topSites }
