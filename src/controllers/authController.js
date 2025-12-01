@@ -43,4 +43,4 @@ async function checkUserExists(req, res) {
     }
 }
 
-module.exports = { register, login, getUser };
+module.exports = { register, login, getUser, checkUserExists };
