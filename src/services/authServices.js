@@ -115,5 +115,15 @@ async function loginUser(identifier, password) {
     }
 }
 
+async function checkUserExistsByIdentifier(identifier) {
+    const user = await prisma.User.findFirst({
+        where: {
+            OR: [{ username: identifier },
+            { email: identifier }]
+        },
+    });
+    return user !== null;
+}
 
-module.exports = { registerUser, loginUser, getUser };
+
+module.exports = { registerUser, loginUser, getUser, checkUserExistsByIdentifier };

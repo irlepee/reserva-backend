@@ -19,7 +19,8 @@ async function createGroup(groupData, userId) {
         data: {
             id_owner: BigInt(userId),
             name: groupData.name,
-            color: groupData.color || 0
+            color: groupData.color || 0,
+            description: groupData.description || ''
         }
     });
 
@@ -38,7 +39,8 @@ async function editGroup(groupId, groupData, userId) {
         where: { id: groupId },
         data: {
             name: groupData.name,
-            color: groupData.color
+            color: groupData.color,
+            description: groupData.description
         }
     });
 

@@ -42,4 +42,15 @@ async function deleteG(req, res) {
     }
 }
 
-module.exports = { getGroups, create, edit, deleteG }
+async function inviteUser(req, res) {
+    try {
+        const groupId = parseInt(req.params.groupId);
+        const { userId } = req.body;
+        const result = await groupService.inviteUserToGroup(groupId, userId, req.user.userId);
+        res.status(200).json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { getGroups, create, edit, deleteG, inviteUser };
