@@ -33,14 +33,4 @@ async function login(req, res) {
     }
 }
 
-async function checkUserExists(req, res) {
-    try {
-        const { identifier } = req.body;
-        const exists = await authService.checkUserExists(identifier);
-        res.status(200).json({ exists });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-}
-
-module.exports = { register, login, getUser, checkUserExists };
+module.exports = { register, login, getUser };

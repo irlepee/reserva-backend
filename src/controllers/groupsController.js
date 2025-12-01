@@ -42,15 +42,14 @@ async function deleteG(req, res) {
     }
 }
 
-async function inviteUser(req, res) {
+async function checkUserExists(req, res) {
     try {
-        const groupId = parseInt(req.params.groupId);
-        const { userId } = req.body;
-        const result = await groupService.inviteUserToGroup(groupId, userId, req.user.userId);
-        res.status(200).json(result);
+        const { identifier } = req.body;
+        const exists = await groupService.checkUserExistsByIdentifier(identifier);
+        res.status(200).json({ exists });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 }
 
-module.exports = { getGroups, create, edit, deleteG, inviteUser };
+module.exports = { getGroups, create, edit, deleteG, checkUserExists };

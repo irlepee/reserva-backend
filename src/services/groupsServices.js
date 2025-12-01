@@ -76,4 +76,14 @@ async function isOwnedByUser(groupId, userId) {
     }
 }
 
-module.exports = { getMyGroups, createGroup, editGroup, deleteGroup }
+async function checkUserExistsByIdentifier(identifier) {
+    const user = await prisma.User.findFirst({
+        where: {
+            OR: [{ username: identifier },
+            { email: identifier }]
+        },
+    });
+    return user !== null;
+}
+
+module.exports = { getMyGroups, createGroup, editGroup, deleteGroup, checkUserExistsByIdentifier }

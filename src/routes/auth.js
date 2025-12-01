@@ -7,6 +7,4 @@ router.get('/', authMiddleware.jwtauthenticator, authController.getUser);
 router.post('/register', authController.register);
 router.post('/login', authController.login);
 
-router.post('/exists', authController.checkUserExists);
-
 module.exports = router;

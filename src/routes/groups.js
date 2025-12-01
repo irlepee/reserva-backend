@@ -8,6 +8,7 @@ router.post('/', authMiddleware.jwtauthenticator, groupsController.create);
 router.put('/:groupId', authMiddleware.jwtauthenticator, groupsController.edit);
 router.delete('/:groupId', authMiddleware.jwtauthenticator, groupsController.deleteG);
 
-router.put('/:groupId/inviteUser', authMiddleware.jwtauthenticator, groupsController.inviteUser);
+router.post('/exists', authMiddleware.jwtauthenticator, groupsController.checkUserExists);
+
 
 module.exports = router;
