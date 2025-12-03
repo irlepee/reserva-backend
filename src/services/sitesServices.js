@@ -90,8 +90,28 @@ async function deleteSite(siteId, userId) {
 
     await isOwner(siteId, userId);
 
+    // Eliminar todas las reservas asociadas a los recursos del sitio
+    const resources = await prisma.Resource.findMany({
+        where: { id_site: siteId },
+        select: { id: true }
+    });
+
+    const resourceIds = resources.map(r => r.id);
+
+    if (resourceIds.length > 0) {
+        await prisma.Reserva.deleteMany({
+            where: { id_resource: { in: resourceIds } }
+        });
+    }
+
+    // Eliminar todos los recursos del sitio
+    await prisma.Resource.deleteMany({
+        where: { id_site: siteId }
+    });
+
+    // Finalmente eliminar el sitio
     await prisma.Site.delete({
-        where: { id: siteId },
+        where: { id: siteId }
     });
 
     return { message: 'Site deleted successfully' };
@@ -112,5 +132,27 @@ async function isOwner(siteId, userId) {
     return true;
 }
 
+async function getSiteById(siteId, userId) {
+    const site = await prisma.Site.findFirst({
+        where: {
+            id: siteId,
+            id_owner: BigInt(userId)
+        }
+    });
 
-module.exports = { getMySites, createSite, editSite, deleteSite };
+    if (!site) {
+        throw new Error('Site not found');
+    }
+
+    return {
+        ...site,
+        id_owner: Number(site.id_owner)
+    };
+}
+
+async function getResourceCategories() {
+    const categories = await prisma.ResourceType.findMany();
+    return categories;
+}
+
+module.exports = { getMySites, createSite, editSite, deleteSite, getSiteById, getResourceCategories };

@@ -87,4 +87,9 @@ async function deleteResource(siteId, resourceId, userId) {
     return { message : 'Resource deleted successfully'}
 }
 
-module.exports = { getAllResources, createResource, editResource, deleteResource }
+async function getResourceCategories() {
+    const categories = await prisma.ResourceType.findMany();
+    return categories;
+}
+
+module.exports = { getAllResources, createResource, editResource, deleteResource, getResourceCategories }

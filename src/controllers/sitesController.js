@@ -64,5 +64,23 @@ async function deleteS(req, res) {
     }
 }
 
+async function getSiteById(req, res) {
+    try {
+        const siteId = parseInt(req.params.siteId);
+        const site = await sitesService.getSiteById(siteId, req.user.userId);
+        res.status(200).json(site);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
 
-module.exports = { create, getSites, edit, deleteS }
+async function getCategories(req, res) {
+    try {
+        const categories = await sitesService.getResourceCategories();
+        res.status(200).json(categories);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { create, getSites, edit, deleteS, getSiteById, getCategories };

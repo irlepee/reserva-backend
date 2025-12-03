@@ -44,4 +44,15 @@ async function deleteR(req, res) {
     }
 }
 
-module.exports = { getAll, create, edit, deleteR }
+async function getCategories(req, res) {
+    try {
+        console.log("Fetching resource categories");
+        const categories = await resourcesServices.getResourceCategories();
+        res.status(200).json(categories);
+    }
+    catch (error) {
+        res.status(500).json({ error : error.message })
+    }
+}
+
+module.exports = { getAll, create, edit, deleteR, getCategories }

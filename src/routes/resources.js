@@ -3,6 +3,10 @@ const router = express.Router();
 const resourcesController = require('../controllers/resourcesController')
 const authMiddleware = require('../middleware/authMiddleware')
 
+// Specific routes first
+router.get('/categories', resourcesController.getCategories);
+
+// Generic routes after
 router.get('/:siteId/resources', authMiddleware.jwtauthenticator, resourcesController.getAll);
 router.post('/:siteId/resources', authMiddleware.jwtauthenticator, resourcesController.create);
 router.put('/:siteId/resources/:resourceId', authMiddleware.jwtauthenticator, resourcesController.edit);
