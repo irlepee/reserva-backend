@@ -54,12 +54,25 @@ async function editResource(siteId, resourceId, resourceData, userId) {
         throw new Error("Resource not found")
     }
 
-    const resourceUpdated = prisma.Resource.update({
+    const updateData = {
+        name: resourceData.name,
+    };
+
+    if (resourceData.capacity !== undefined) {
+        updateData.capacity = resourceData.capacity ? parseInt(resourceData.capacity) : null;
+    }
+
+    if (resourceData.resource_type !== undefined) {
+        updateData.resource_type = parseInt(resourceData.resource_type);
+    }
+
+    if (resourceData.status !== undefined) {
+        updateData.status = resourceData.status;
+    }
+
+    const resourceUpdated = await prisma.Resource.update({
         where : { id : resourceId },
-        data : {
-            name : resourceData.name,
-            color : resourceData.color
-        }
+        data : updateData
     })
 
     return resourceUpdated;
