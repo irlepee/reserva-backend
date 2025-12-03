@@ -4,16 +4,59 @@ const { id } = require('zod/locales');
 const prisma = new PrismaClient();
 
 async function getMyGroups(userId) {
-    const groups = await prisma.Group.findMany({
+    const numUserId = BigInt(userId);
+
+    // Obtener grupos que el usuario posee
+    const ownedGroups = await prisma.Group.findMany({
         where: {
-            id_owner: BigInt(userId)
+            id_owner: numUserId
         }
     });
 
-    return groups.map(group => ({
-        ...group,
-        id_owner: Number(group.id_owner)
-    }));
+    // Obtener grupos en los que el usuario es miembro
+    const memberGroups = await prisma.UserGroup.findMany({
+        where: {
+            id_user: numUserId
+        },
+        select: { id_group: true }
+    });
+
+    // Obtener detalles de los grupos en los que es miembro
+    const memberGroupIds = memberGroups.map(mg => mg.id_group);
+    const groupsAsMember = memberGroupIds.length > 0
+        ? await prisma.Group.findMany({
+            where: {
+                id: { in: memberGroupIds }
+            }
+        })
+        : [];
+
+    // Combinar y evitar duplicados
+    const allGroupsMap = new Map();
+    
+    // Añadir grupos propios
+    ownedGroups.forEach(group => {
+        allGroupsMap.set(group.id, {
+            ...group,
+            id_owner: Number(group.id_owner),
+            role: 'owner'
+        });
+    });
+
+    // Añadir grupos donde es miembro (no sobrescribir propios)
+    groupsAsMember.forEach(group => {
+        if (!allGroupsMap.has(group.id)) {
+            allGroupsMap.set(group.id, {
+                ...group,
+                id_owner: Number(group.id_owner),
+                role: 'member'
+            });
+        }
+    });
+
+    const allGroups = Array.from(allGroupsMap.values());
+
+    return allGroups;
 }
 
 async function createGroup(groupData, userId) {
@@ -84,10 +127,10 @@ async function checkUserExistsByIdentifier(identifier) {
         where: {
             OR: [{ username: identifier },
             { email: identifier }]
-        },
+        }
     });
 
-    return user !== null;
+    return Number(user.id) || null;
 }
 
 async function getGroupInfoById(groupId, userId) {
@@ -103,19 +146,59 @@ async function getGroupInfoById(groupId, userId) {
     return safeGroup;
 }
 
-async function getAllGroupMembers(groupId, userId) {
+async function getGroupAdminById(groupId) {
 
-    await isOwnedByUser(groupId, userId);
+    const group = await prisma.Group.findUnique({
+        where: { id: groupId },
+        select: { id_owner: true }
+    });
+
+    const admin = await prisma.User.findUnique({
+        where : { id: group.id_owner },
+        select: {
+            id: true,
+            username: true,
+            email: true,
+            name: true,
+            lastname: true
+        }
+    });
+
+    const safeAdmin = {
+        ...admin,
+        id: Number(admin.id)
+    }
+
+    console.log("Admin:", safeAdmin);
+
+    return safeAdmin;
+}
+
+async function getAllGroupMembers(groupId) {
 
     const members = await prisma.UserGroup.findMany({
         where: { id_group: groupId },
-        select: { id_user: true }
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    name: true
+                }
+            }
+        }
     });
 
-    console.log("Fetched members:", members);
-
     const safeMembers = members.map(member => ({
-        id_user: Number(member.id_user)
+        id_user: Number(member.id_user),
+        user: {
+            id: Number(member.user.id),
+            username: member.user.username,
+            lastname: member.user.lastname,
+            email: member.user.email,
+            name: member.user.name
+        }
     }));
 
     return safeMembers;
@@ -125,16 +208,26 @@ async function getAllGroupMembers(groupId, userId) {
 // INVITE AND MEMBER MANAGEMENT FUNCTIONS
 
 async function getUserGroupInvitations(userId) {
-    console.log("Fetching invitations for userId:", userId);
     const invitations = await prisma.Invitation.findMany({
         where: { id_user: BigInt(userId) },
     });
 
-    safeInvitations = invitations.map(invitation => ({
-        ...invitation,
-        id_user: Number(invitation.id_user),
+    if (invitations.length === 0) {
+        return [];
+    }
+
+    const groups = await prisma.Group.findMany({
+        where: {
+            id: { in: invitations.map(invite => invite.id_group) }
+        }
+    });
+
+    const safeGroups = groups.map(group => ({
+        ...group,
+        id_owner: Number(group.id_owner)
     }));
-    return safeInvitations;
+
+    return safeGroups;
 }
 
 async function inviteMembersToGroup(groupId, users, userId) {
@@ -160,20 +253,17 @@ async function inviteMembersToGroup(groupId, users, userId) {
             count: invitations.count
         };
     } catch (error) {
-        console.error("Error creating invitations:", error);
         throw error;
     }
 }
 
 async function acceptInvitationToGroup(data, userId) {
 
-    console.log("Service: Accepting invitation with data:", data, "for userId:", userId);
-
     // Invitación existe
     const invitation = await prisma.Invitation.findFirst({
         where: {
             id_user: userId,
-            id_group: data.id_group
+            id_group: data.groupId
         }
     });
 
@@ -185,11 +275,9 @@ async function acceptInvitationToGroup(data, userId) {
     await prisma.UserGroup.create({
         data: {
             id_user: userId,
-            id_group: data.id_group
+            id_group: data.groupId
         }
     });
-
-    console.log("Service: User added to group:", data.id_group);
 
     // Eliminar invitación
     await prisma.Invitation.delete({
@@ -205,6 +293,8 @@ async function acceptInvitationToGroup(data, userId) {
 }
 
 async function declineInvitationToGroup(data, userId) {
+
+    console.log('Declining invitation for user:', userId, 'and data:', data);
 
     const invitation = await prisma.Invitation.findFirst({
         where: {
@@ -247,4 +337,4 @@ async function removeMemberFromGroup(groupId, memberId, userId) {
 
 }
 
-module.exports = { getMyGroups, createGroup, editGroup, deleteGroupById, getGroupInfoById, checkUserExistsByIdentifier, getAllGroupMembers, inviteMembersToGroup, removeMemberFromGroup, getUserGroupInvitations, acceptInvitationToGroup, declineInvitationToGroup };
+module.exports = { getMyGroups, createGroup, editGroup, deleteGroupById, getGroupInfoById, checkUserExistsByIdentifier, getAllGroupMembers, inviteMembersToGroup, removeMemberFromGroup, getUserGroupInvitations, acceptInvitationToGroup, declineInvitationToGroup, getGroupAdminById };

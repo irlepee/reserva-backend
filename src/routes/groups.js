@@ -8,7 +8,7 @@ router.get('/invitations', authMiddleware.jwtauthenticator, groupsController.get
 
 router.post('/:groupId/invite', authMiddleware.jwtauthenticator, groupsController.inviteMember);
 router.post('/accept', authMiddleware.jwtauthenticator, groupsController.acceptInvitation);
-router.post('/decline', authMiddleware.jwtauthenticator, groupsController.declineInvitation);
+router.post('/reject', authMiddleware.jwtauthenticator, groupsController.declineInvitation);
 router.post('/remove', authMiddleware.jwtauthenticator, groupsController.removeMember);
 
 // ----------------------------------------------------------------------------------------------------
@@ -21,5 +21,6 @@ router.get('/:groupId', authMiddleware.jwtauthenticator, groupsController.getGro
 router.put('/:groupId', authMiddleware.jwtauthenticator, groupsController.edit);
 router.delete('/:groupId', authMiddleware.jwtauthenticator, groupsController.deleteGroup);
 router.get('/:groupId/members', authMiddleware.jwtauthenticator, groupsController.getGroupMembers);
+router.get('/:groupId/admin', authMiddleware.jwtauthenticator, groupsController.getGroupAdmin);
 
 module.exports = router;

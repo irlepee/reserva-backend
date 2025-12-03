@@ -16,7 +16,6 @@ async function create(req, res) {
         const newGroup = await groupService.createGroup(groupData, req.user.userId);
         res.status(201).json(newGroup);
     } catch (error) {
-        console.error(error);
         res.status(400).json({ success: false, error: error.message || "Ocurrio un error inesperado" });
     }
 }
@@ -46,7 +45,7 @@ async function checkUserExists(req, res) {
     try {
         const { identifier } = req.body;
         const exists = await groupService.checkUserExistsByIdentifier(identifier);
-        res.status(200).json({ exists });
+        res.status(200).json(exists);
     } catch (error) {
         res.status(400).json({ success: false, error: error.message || "Ocurrio un error inesperado" });
     }
@@ -62,10 +61,21 @@ async function getGroupInfo(req, res) {
     }
 }
 
+async function getGroupAdmin(req, res) {
+    try {
+        console.log("Entro")
+        const groupId = parseInt(req.params.groupId);
+        const admin = await groupService.getGroupAdminById(groupId);
+        res.status(200).json(admin);
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message || "Ocurrio un error inesperado" });
+    }
+}
+
 async function getGroupMembers(req, res) {
     try {
         const groupId = parseInt(req.params.groupId);
-        const members = await groupService.getAllGroupMembers(groupId, req.user.userId);
+        const members = await groupService.getAllGroupMembers(groupId);
         res.status(200).json(members);
     } catch (error) {
         res.status(400).json({ success: false, error: error.message || "Ocurrio un error inesperado" });
@@ -77,7 +87,6 @@ async function getGroupMembers(req, res) {
 
 async function getInvitations(req, res) {
     try {
-        console.log("Controller: Getting invitations for userId:", req.user.userId);
         const invitations = await groupService.getUserGroupInvitations(req.user.userId);
         res.status(200).json(invitations);
     } catch (error) {
@@ -93,12 +102,12 @@ async function inviteMember(req, res) {
     } catch (error) {
         res.status(400).json({ success: false, error: error.message || "Ocurrio un error inesperado" });
     }
-
 }
 
 async function acceptInvitation(req, res) {
     try {
         const data = req.body;
+        console.log("Controller: Accepting invitation with data:", data, "for userId:", req.user.userId);
         const result = await groupService.acceptInvitationToGroup(data, req.user.userId);
         res.status(200).json(result);
     } catch (error) {
@@ -108,6 +117,7 @@ async function acceptInvitation(req, res) {
 
 async function declineInvitation(req, res) {
     try {
+        console.log("Controller: Declining invitation with data:", req.body, "for userId:", req.user.userId);
         const data = req.body;
         const result = await groupService.declineInvitationToGroup(data, req.user.userId);
         res.status(200).json(result);
@@ -128,4 +138,4 @@ async function removeMember(req, res) {
 
 
 
-module.exports = { getGroups, create, edit, deleteGroup, checkUserExists, getGroupInfo, getGroupMembers, getInvitations, inviteMember, removeMember, acceptInvitation, declineInvitation };
+module.exports = { getGroups, create, edit, deleteGroup, checkUserExists, getGroupInfo, getGroupMembers, getGroupAdmin, getInvitations, inviteMember, removeMember, acceptInvitation, declineInvitation };
