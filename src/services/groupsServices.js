@@ -33,7 +33,7 @@ async function getMyGroups(userId) {
 
     // Combinar y evitar duplicados
     const allGroupsMap = new Map();
-    
+
     // Añadir grupos propios
     ownedGroups.forEach(group => {
         allGroupsMap.set(group.id, {
@@ -102,6 +102,19 @@ async function deleteGroupById(groupId, userId) {
 
     await isOwnedByUser(groupId, userId);
 
+    console.log("Service: Deleting group with ID:", groupId);
+
+    // Eliminar todas las invitaciones del grupo
+    await prisma.Invitation.deleteMany({
+        where: { id_group: groupId }
+    });
+
+    // Eliminar todos los miembros del grupo
+    await prisma.UserGroup.deleteMany({
+        where: { id_group: groupId }
+    });
+
+    // Finalmente eliminar el grupo
     await prisma.Group.delete({
         where: { id: groupId }
     });
@@ -133,9 +146,7 @@ async function checkUserExistsByIdentifier(identifier) {
     return Number(user.id) || null;
 }
 
-async function getGroupInfoById(groupId, userId) {
-
-    await isOwnedByUser(groupId, userId);
+async function getGroupInfoById(groupId) {
 
     const group = await prisma.Group.findUnique({
         where: { id: groupId },
@@ -154,7 +165,7 @@ async function getGroupAdminById(groupId) {
     });
 
     const admin = await prisma.User.findUnique({
-        where : { id: group.id_owner },
+        where: { id: group.id_owner },
         select: {
             id: true,
             username: true,
@@ -168,8 +179,6 @@ async function getGroupAdminById(groupId) {
         ...admin,
         id: Number(admin.id)
     }
-
-    console.log("Admin:", safeAdmin);
 
     return safeAdmin;
 }
@@ -248,8 +257,8 @@ async function inviteMembersToGroup(groupId, users, userId) {
         });
 
         return {
-            success: true, 
-            message: 'Invitations sent successfully', 
+            success: true,
+            message: 'Invitations sent successfully',
             count: invitations.count
         };
     } catch (error) {
@@ -293,8 +302,6 @@ async function acceptInvitationToGroup(data, userId) {
 }
 
 async function declineInvitationToGroup(data, userId) {
-
-    console.log('Declining invitation for user:', userId, 'and data:', data);
 
     const invitation = await prisma.Invitation.findFirst({
         where: {

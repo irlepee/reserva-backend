@@ -33,6 +33,7 @@ async function edit(req, res) {
 
 async function deleteGroup(req, res) {
     try {
+        console.log("Deleting group with ID:", req.params.groupId);
         const groupId = parseInt(req.params.groupId);
         const result = await groupService.deleteGroupById(groupId, req.user.userId);
         res.status(200).json(result);
@@ -63,7 +64,6 @@ async function getGroupInfo(req, res) {
 
 async function getGroupAdmin(req, res) {
     try {
-        console.log("Entro")
         const groupId = parseInt(req.params.groupId);
         const admin = await groupService.getGroupAdminById(groupId);
         res.status(200).json(admin);
@@ -107,7 +107,6 @@ async function inviteMember(req, res) {
 async function acceptInvitation(req, res) {
     try {
         const data = req.body;
-        console.log("Controller: Accepting invitation with data:", data, "for userId:", req.user.userId);
         const result = await groupService.acceptInvitationToGroup(data, req.user.userId);
         res.status(200).json(result);
     } catch (error) {
@@ -117,7 +116,6 @@ async function acceptInvitation(req, res) {
 
 async function declineInvitation(req, res) {
     try {
-        console.log("Controller: Declining invitation with data:", req.body, "for userId:", req.user.userId);
         const data = req.body;
         const result = await groupService.declineInvitationToGroup(data, req.user.userId);
         res.status(200).json(result);

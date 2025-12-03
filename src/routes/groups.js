@@ -7,9 +7,9 @@ router.post('/exists', authMiddleware.jwtauthenticator, groupsController.checkUs
 router.get('/invitations', authMiddleware.jwtauthenticator, groupsController.getInvitations)
 
 router.post('/:groupId/invite', authMiddleware.jwtauthenticator, groupsController.inviteMember);
+router.post('/:groupId/remove', authMiddleware.jwtauthenticator, groupsController.removeMember);
 router.post('/accept', authMiddleware.jwtauthenticator, groupsController.acceptInvitation);
 router.post('/reject', authMiddleware.jwtauthenticator, groupsController.declineInvitation);
-router.post('/remove', authMiddleware.jwtauthenticator, groupsController.removeMember);
 
 // ----------------------------------------------------------------------------------------------------
 
