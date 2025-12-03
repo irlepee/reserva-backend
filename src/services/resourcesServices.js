@@ -10,7 +10,7 @@ async function getAllResources(siteId) {
 }
 
 async function createResource(siteId, siteData, userId) {
-    const siteOwner = await prisma.site.findFirst({
+    const siteOwner = await prisma.Site.findFirst({
         where: { id : siteId, id_owner : BigInt(userId) }
     });
 
@@ -18,12 +18,16 @@ async function createResource(siteId, siteData, userId) {
         throw new Error("Site not found")
     }
 
+    if (!siteData.resource_type) {
+        throw new Error("resource_type is required");
+    }
+
     const newResource = await prisma.Resource.create({
         data: {
             id_site: siteId,
             name: siteData.name,
-            resource_type: siteData.resource_type,
-            capacity: siteData.capacity,
+            resource_type: parseInt(siteData.resource_type),
+            capacity: siteData.capacity ? parseInt(siteData.capacity) : null,
             status: "Available",
         }
     })
