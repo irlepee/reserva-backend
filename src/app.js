@@ -3,8 +3,13 @@ const cors = require('cors')
 
 const app = express();
 
-app.use(express.json());
+// Aumentar límite de tamaño para JSON y URL-encoded (para imágenes base64 u otros datos grandes)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
+
+// Servir archivos estáticos (imágenes subidas)
+app.use('/uploads', express.static('src/uploads'));
 
 app.get('/ping', (req, res) => {
     res.json({ message: 'pong' });

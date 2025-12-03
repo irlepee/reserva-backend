@@ -12,6 +12,12 @@ async function getSites(req, res) {
 async function create(req, res) {
     try {
         const siteData = req.body;
+
+        // Si hay imágenes subidas
+        if (req.files && req.files.length > 0) {
+            siteData.images = req.files.map(file => `/uploads/sites/${file.filename}`);
+        }
+
         const newSite = await sitesService.createSite(siteData, req.user.userId);
         res.status(201).json(newSite);
     } catch (error) {
@@ -23,6 +29,12 @@ async function edit(req, res) {
     try {
         const siteId = parseInt(req.params.siteId);
         const siteData = req.body;
+
+        // Si hay imágenes nuevas subidas
+        if (req.files && req.files.length > 0) {
+            siteData.images = req.files.map(file => `/uploads/sites/${file.filename}`);
+        }
+
         const updateSite = await sitesService.editSite(siteId, siteData, req.user.userId);
         res.status(200).json(updateSite);
     } catch (error) {
@@ -39,5 +51,6 @@ async function deleteS(req, res) {
         res.status(500).json({ error: error.message });
     }
 }
+
 
 module.exports = { create, getSites, edit, deleteS }

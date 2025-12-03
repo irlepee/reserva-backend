@@ -24,6 +24,7 @@ async function createSite(siteData, userId) {
             id_entidad: siteData.id_entidad,
             id_municipio: siteData.id_municipio,
             id_localidad: siteData.id_localidad,
+            images: siteData.images || []  // Añadir imágenes si existen
         },
     });
 
@@ -39,15 +40,22 @@ async function editSite(siteId, siteData, userId) {
 
     await isOwner(siteId, userId);
 
+    const updateData = {
+        name: siteData.name,
+        description: siteData.description,
+        id_entidad: siteData.id_entidad,
+        id_municipio: siteData.id_municipio,
+        id_localidad: siteData.id_localidad,
+    };
+
+    // Si hay imágenes nuevas, reemplazar. Si no, mantener las existentes
+    if (siteData.images && siteData.images.length > 0) {
+        updateData.images = siteData.images;
+    }
+
     const updatedSite = await prisma.Site.update({
         where: { id: siteId },
-        data: {
-            name: siteData.name,
-            description: siteData.description,
-            id_entidad: siteData.id_entidad,
-            id_municipio: siteData.id_municipio,
-            id_localidad: siteData.id_localidad,
-        },
+        data: updateData,
     });
 
     const safeSite = {
@@ -83,5 +91,6 @@ async function isOwner(siteId, userId) {
 
     return true;
 }
+
 
 module.exports = { getMySites, createSite, editSite, deleteSite };
