@@ -1,19 +1,23 @@
 const express = require('express');
-const cors = require('cors')
+const cors = require('cors');
+const path = require('path');
 
 const app = express();
+
+// Configuración de CORS más permisiva para desarrollo
+app.use(cors({
+  origin: ['http://localhost:4200', 'http://localhost:3000', 'http://127.0.0.1:4200'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Aumentar límite de tamaño para JSON y URL-encoded (para imágenes base64 u otros datos grandes)
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors());
 
-// Servir archivos estáticos (imágenes subidas)
-app.use('/uploads', express.static('src/uploads'));
-
-app.get('/ping', (req, res) => {
-    res.json({ message: 'pong' });
-});
+// Servir archivos estáticos (imágenes subidas) con ruta absoluta
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 //Rutas
 const authRoutes = require('./routes/auth');
