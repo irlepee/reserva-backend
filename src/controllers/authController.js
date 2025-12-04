@@ -12,7 +12,6 @@ async function getUser(req, res) {
 
 async function register(req, res) {
     try {
-        console.log(req.body);
         const data = validateRegister(req.body);
         const result = await authService.registerUser(data);
         res.status(201).json(result);
@@ -37,18 +36,13 @@ async function verifyEmail(req, res) {
     try {
         const { token } = req.body;
 
-        console.log('📧 Verify Email Request recibido');
-        console.log('   Token recibido:', token ? token.substring(0, 20) + '...' : 'NO RECIBIDO');
-
         if (!token) {
             return res.status(400).json({ error: 'Token de verificación requerido' });
         }
 
         const result = await authService.verifyEmail(token);
-        console.log('✅ Email verificado:', result);
         res.status(200).json(result);
     } catch (error) {
-        console.error('❌ Error en verify-email:', error.message);
         res.status(400).json({ error: error.message });
     }
 }

@@ -16,12 +16,6 @@ async function getMySites(userId) {
 }
 
 async function createSite(siteData, userId) {
-    console.log('Service: Creating site with data:', { 
-        name: siteData.name, 
-        description: siteData.description,
-        imagesCount: siteData.images?.length || 0,
-        images: siteData.images
-    });
 
     const newSite = await prisma.Site.create({
         data: {

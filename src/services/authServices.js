@@ -141,13 +141,9 @@ async function loginUser(identifier, password) {
 
 async function verifyEmail(token) {
     try {
-        console.log('🔍 Verificando token...');
-        
         // Verificar y decodificar el token JWT
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const email = decoded.email;
-
-        console.log('✅ Token decodificado correctamente. Email:', email);
 
         // Buscar el usuario por email
         const user = await prisma.User.findFirst({
@@ -155,20 +151,15 @@ async function verifyEmail(token) {
         });
 
         if (!user) {
-            console.error('❌ Usuario no encontrado para email:', email);
             throw new Error('Usuario no encontrado');
         }
 
-        console.log('👤 Usuario encontrado:', user.username);
-
         // Verificar que el token coincida y no haya expirado
         if (user.email_verify_token !== token) {
-            console.error('❌ Token no coincide');
             throw new Error('Token inválido');
         }
 
         if (new Date() > user.email_verify_token_exp) {
-            console.error('❌ Token expirado');
             throw new Error('Token expirado');
         }
 
@@ -188,8 +179,6 @@ async function verifyEmail(token) {
                 email_verified: true,
             }
         });
-
-        console.log('✅ Usuario verificado correctamente:', verifiedUser.username);
 
         return {
             ...verifiedUser,

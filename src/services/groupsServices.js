@@ -99,10 +99,7 @@ async function editGroup(groupId, groupData, userId) {
 }
 
 async function deleteGroupById(groupId, userId) {
-
     await isOwnedByUser(groupId, userId);
-
-    console.log("Service: Deleting group with ID:", groupId);
 
     // Eliminar todas las invitaciones del grupo
     await prisma.Invitation.deleteMany({

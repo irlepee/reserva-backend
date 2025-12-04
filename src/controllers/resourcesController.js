@@ -46,7 +46,6 @@ async function deleteR(req, res) {
 
 async function getCategories(req, res) {
     try {
-        console.log("Fetching resource categories");
         const categories = await resourcesServices.getResourceCategories();
         res.status(200).json(categories);
     }

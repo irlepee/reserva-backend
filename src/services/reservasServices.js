@@ -5,21 +5,76 @@ const prisma = new PrismaClient();
 // VERIFICAR QUE DEVUELVA LAS RESERVAS ACTIVAS
 async function getAllMyReservas(userId) {
     const reservas = await prisma.Reserva.findMany({
-        where: { id_owner: BigInt(userId), status: "Active" }
+        where: { id_owner: BigInt(userId), status: "Active" },
+        include: {
+            Resource: {
+                select: {
+                    id: true,
+                    name: true,
+                    belongs: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    }
+                }
+            }
+        }
     });
 
     const safeReservas = reservas.map(r => ({
         ...r,
         id: Number(r.id),
-        id_owner: Number(r.id_owner)
+        id_owner: Number(r.id_owner),
+        resource_name: r.Resource?.name,
+        site_name: r.Resource?.belongs?.name,
+        site_id: r.Resource?.belongs?.id
     }));
 
     return safeReservas;
 }
 
 async function createReserva(reservaData, userId) {
-
     validateDates(reservaData.start_date, reservaData.end_date);
+
+    // Verificar que no haya conflicto con otras reservas activas del mismo recurso
+    const conflictingReserva = await prisma.Reserva.findFirst({
+        where: {
+            id_resource: reservaData.id_resource,
+            status: "Active",
+            // Una reserva conflictúa si:
+            // - Su inicio está dentro del rango solicitado, O
+            // - Su fin está dentro del rango solicitado, O
+            // - Envuelve completamente el rango solicitado
+            OR: [
+                {
+                    // El inicio de la reserva existente está dentro del nuevo rango
+                    start_date: {
+                        gte: new Date(reservaData.start_date),
+                        lt: new Date(reservaData.end_date)
+                    }
+                },
+                {
+                    // El fin de la reserva existente está dentro del nuevo rango
+                    end_date: {
+                        gt: new Date(reservaData.start_date),
+                        lte: new Date(reservaData.end_date)
+                    }
+                },
+                {
+                    // La reserva existente envuelve completamente el nuevo rango
+                    AND: [
+                        { start_date: { lte: new Date(reservaData.start_date) } },
+                        { end_date: { gte: new Date(reservaData.end_date) } }
+                    ]
+                }
+            ]
+        }
+    });
+
+    if (conflictingReserva) {
+        throw new Error("El recurso ya está reservado en ese horario");
+    }
 
     const newReserva = await prisma.Reserva.create({
         data: {
@@ -180,6 +235,65 @@ async function topReservedSites(userId) {
     };
 }
 
+async function getSites() {
+    const sites = await prisma.Site.findMany();
+    
+    const safeSites = sites.map(site => ({
+        ...site,
+        id_owner: Number(site.id_owner)
+    }));
 
+    return safeSites;
+}
 
-module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory, topReservedSites }
+async function getResources(siteId) {
+    const resources = await prisma.Resource.findMany({
+        where: { id_site: siteId }
+    });
+    return resources;
+}
+
+async function getOccupiedHours(resourceId, date) {
+    // Crear rango del día completo (restando 1 día para compensar desfase)
+    const startOfDay = new Date(date);
+    startOfDay.setDate(startOfDay.getDate() + 1);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(date);
+    endOfDay.setDate(endOfDay.getDate() + 1);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Buscar todas las reservas activas del recurso en ese día
+    const reservas = await prisma.Reserva.findMany({
+        where: {
+            id_resource: resourceId,
+            status: "Active",
+            // Reservas que intersectan con ese día
+            start_date: { lt: endOfDay },
+            end_date: { gt: startOfDay }
+        },
+        select: {
+            start_date: true,
+            end_date: true
+        },
+        orderBy: { start_date: 'asc' }
+    });
+
+    // Convertir a formato de horas ocupadas
+    const occupied_hours = reservas.map(r => {
+        const start = new Date(r.start_date);
+        const end = new Date(r.end_date);
+        
+        return {
+            start: start.getHours(),
+            end: end.getHours()
+        };
+    });
+
+    return {
+        date: date,
+        occupied_hours: occupied_hours
+    };
+}
+
+module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory, topReservedSites, getSites, getResources, getOccupiedHours }
