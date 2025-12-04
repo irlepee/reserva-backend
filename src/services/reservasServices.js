@@ -18,6 +18,12 @@ async function getAllMyReservas(userId) {
                         }
                     }
                 }
+            },
+            group: {
+                select: {
+                    id: true,
+                    name: true
+                }
             }
         }
     });
@@ -28,7 +34,8 @@ async function getAllMyReservas(userId) {
         id_owner: Number(r.id_owner),
         resource_name: r.Resource?.name,
         site_name: r.Resource?.belongs?.name,
-        site_id: r.Resource?.belongs?.id
+        site_id: r.Resource?.belongs?.id,
+        group_name: r.group?.name || null
     }));
 
     return safeReservas;

@@ -71,4 +71,14 @@ async function getCategories(req, res) {
     }
 }
 
-module.exports = { create, getSites, edit, deleteS, getSiteById, getCategories };
+async function getSiteStats(req, res) {
+    try {
+        const siteId = parseInt(req.params.siteId);
+        const stats = await sitesService.getSiteStats(siteId, req.user.userId);
+        res.status(200).json(stats);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { create, getSites, edit, deleteS, getSiteById, getCategories, getSiteStats };
