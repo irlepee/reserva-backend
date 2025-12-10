@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Group" ADD COLUMN     "color" INTEGER NOT NULL DEFAULT 0;
+
+-- AlterTable
+ALTER TABLE "User" ALTER COLUMN "gender" SET DATA TYPE CHAR;

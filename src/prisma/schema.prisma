@@ -1,0 +1,145 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Group {
+  id           Int      @id @default(autoincrement())
+  id_owner     BigInt
+  name         String   @db.VarChar(64)
+  description  String?
+  color        Int      @default(0)
+  date_created DateTime @db.Date @default(now())
+
+  reservas     Reserva[]
+  invitation   Invitation[]
+}
+
+model Invitation {
+  id_user      BigInt
+  id_group     Int
+  createdAt   DateTime @default(now())
+
+  user     User   @relation(fields: [id_user], references: [id])
+  group    Group  @relation(fields: [id_group], references: [id])
+
+  @@id([id_user, id_group])
+}
+
+model Reserva {
+  id          BigInt   @id @default(autoincrement())
+  id_owner    BigInt
+  id_resource Int
+  start_date  DateTime @db.Timestamptz(0)
+  end_date    DateTime @db.Timestamptz(0)
+  status      String
+  id_group    Int?
+  created_at DateTime @default(now()) @db.Timestamptz(0)
+
+  belongs     User @relation(fields: [id_owner], references: [id])
+  Resource    Resource @relation(fields: [id_resource], references: [id])
+  group       Group? @relation(fields: [id_group], references: [id])
+}
+
+model Resource {
+  id            Int      @id @default(autoincrement())
+  id_site       Int
+  name          String   @db.VarChar(50)
+  date_created  DateTime @db.Date @default(now())
+  resource_type Int
+  capacity      Int?
+  status        String
+  belongs       Site @relation(fields: [id_site], references: [id])
+  type          ResourceType @relation(fields: [resource_type], references: [id])
+
+  reserva       Reserva[]
+}
+
+model ResourceType {
+  id          Int    @id
+  name        String @db.VarChar(40)
+  description String
+  resources   Resource[]
+}
+
+model Site {
+  id           Int      @id @default(autoincrement())
+  id_owner     BigInt
+  name         String   @db.VarChar(50)
+  description  String?
+  date_created DateTime @db.Date @default(now())
+  id_entidad   Int?
+  id_municipio Int?
+  id_localidad Int?
+  images       String[] @default([])
+
+  owner        User     @relation(fields: [id_owner], references: [id])
+  resources    Resource[]
+}
+
+model User {
+  id                BigInt   @id @default(autoincrement())
+  username          String   @unique @db.VarChar(24)
+  name              String?  @db.VarChar(50)
+  lastname          String?  @db.VarChar(50)
+  age               Int?     @db.SmallInt
+  gender            String?  @db.Char
+  email             String   @unique @db.VarChar(50)
+  password          String   @db.VarChar(255)
+  id_entidad        Int?
+  id_municipio      Int?
+  id_localidad      Int?
+  emailConfirmed    Boolean  @default(false)
+  confirmationToken String?
+  createdAt         DateTime @default(now()) @db.Date
+  email_verified    Boolean  @default(false)
+  email_verified_at DateTime?
+  email_verify_token String?
+  email_verify_token_exp DateTime?
+
+  Site              Site[]
+  resource          Reserva[]
+  Invitation        Invitation[]
+  userGroups        UserGroup[] @relation("UserToGroups")
+}
+
+model UserGroup {
+  id_user  BigInt
+  id_group Int
+
+  user     User   @relation("UserToGroups", fields: [id_user], references: [id])
+
+  @@id([id_user, id_group])
+}
+
+model Entidad {
+  id        Int         @id
+  name      String
+  Municipio Municipio[]
+  Localidad Localidad[]
+}
+
+model Municipio {
+  id_entidad Int
+  id         Int
+  name       String
+  entidad    Entidad     @relation(fields: [id_entidad], references: [id])
+  Localidad  Localidad[]
+
+  @@id([id, id_entidad])
+}
+
+model Localidad {
+  id_entidad   Int
+  id_municipio Int
+  id           Int
+  name         String
+  municipio    Municipio @relation(fields: [id_municipio, id_entidad], references: [id, id_entidad])
+  entidad      Entidad   @relation(fields: [id_entidad], references: [id])
+
+  @@id([id, id_entidad, id_municipio])
+}
