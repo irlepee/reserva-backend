@@ -1,4 +1,4 @@
-const apiKey = process.env.GEMINI_API_KEY;
+const apiKey = 'AIzaSyBzRLD2sxCJ-23k0k4hNsRfg23U7adW5rI';
 const API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
 
 const MAX_RETRIES = 5;
