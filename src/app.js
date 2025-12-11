@@ -38,4 +38,7 @@ app.use('/reservas', reservasRoutes);
 const locationsRoutes = require('./routes/locations');
 app.use('/', locationsRoutes);
 
+const reportesRoutes = require('./routes/reportes');
+app.use('/reportes', reportesRoutes);
+
 module.exports = app;

@@ -2,10 +2,13 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 //const { id } = require('zod/locales');
 
-// VERIFICAR QUE DEVUELVA LAS RESERVAS ACTIVAS
+// DEVUELVE LAS RESERVAS ACTIVAS Y EN CURSO
 async function getAllMyReservas(userId) {
     const reservas = await prisma.Reserva.findMany({
-        where: { id_owner: BigInt(userId), status: "Active" },
+        where: { 
+            id_owner: BigInt(userId), 
+            status: { in: ["Active", "In Progress"] }
+        },
         include: {
             Resource: {
                 select: {
