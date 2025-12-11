@@ -394,4 +394,42 @@ async function getRecommendations(userId) {
     return recommendations.slice(0, 3);
 }
 
-module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory, topReservedSites, getSites, getResources, getOccupiedHours, getRecommendations }
+async function getBySite(siteId) {
+
+    const reservas = await prisma.Reserva.findMany({
+        where: {
+            Resource: {
+                id_site: siteId
+            }
+        },
+        include: {
+            Resource: {
+                select: {
+                    id: true,
+                    name: true,
+                }
+            },
+            group: {
+                select: {
+                    id: true,
+                    name: true
+                }
+            }
+        }
+    });
+
+    console.log("Reservas encontradas en getBySite:", reservas);
+
+    const safeReservas = reservas.map(r => ({
+        ...r,
+        id: Number(r.id),
+        id_owner: Number(r.id_owner),
+        resource_name: r.Resource?.name,
+        site_name: r.Resource?.belongs?.name,
+        site_id: r.Resource?.belongs?.id,
+        group_name: r.group?.name || null
+    }));
+    return safeReservas;
+}
+
+module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory, topReservedSites, getSites, getResources, getOccupiedHours, getRecommendations, getBySite }

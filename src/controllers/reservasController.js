@@ -121,4 +121,15 @@ async function quickReserveFromRecommendation(req, res) {
     }
 }
 
-module.exports = { getAllReservas, create, cancel, history, topSites, getSites, getResources, getOccupiedHours, getRecommendations, quickReserveFromRecommendation }
+async function getBySite(req, res) {
+    try {
+        console.log("Entro al controlador getBySite", req.params.siteId);
+        const siteId = parseInt(req.params.siteId);
+        const reservas = await reservasServices.getBySite(siteId);
+        res.status(200).json(reservas);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { getAllReservas, create, cancel, history, topSites, getSites, getResources, getOccupiedHours, getRecommendations, quickReserveFromRecommendation, getBySite }

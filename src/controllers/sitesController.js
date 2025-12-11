@@ -15,7 +15,7 @@ async function create(req, res) {
 
         // Si hay imágenes subidas
         if (req.files && req.files.length > 0) {
-            siteData.images = req.files.map(file => `/uploads/sites/${file.filename}`);
+            siteData.newImages = req.files.map(file => `/uploads/sites/${file.filename}`);
         }
 
         const newSite = await sitesService.createSite(siteData, req.user.userId);
@@ -32,7 +32,7 @@ async function edit(req, res) {
 
         // Si hay imágenes nuevas subidas
         if (req.files && req.files.length > 0) {
-            siteData.images = req.files.map(file => `/uploads/sites/${file.filename}`);
+            siteData.newImages = req.files.map(file => `/uploads/sites/${file.filename}`);
         }
 
         const updateSite = await sitesService.editSite(siteId, siteData, req.user.userId);
