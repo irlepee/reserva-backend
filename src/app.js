@@ -6,7 +6,7 @@ const app = express();
 
 // Configuración de CORS más permisiva para desarrollo
 app.use(cors({
-  origin: ['http://localhost:4200', 'http://localhost:3000', 'http://127.0.0.1:4200'],
+  origin: ['http://localhost:4200', 'http://localhost:3000', 'http://127.0.0.1:4200', 'https://reserva-lepe.netlify.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
