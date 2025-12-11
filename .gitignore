@@ -3,6 +3,7 @@
 /prisma
 !/src/prisma/schema.prisma
 !/src/prisma/migrations
+src/uploads/sites
 
 /JSONs para probar
 
