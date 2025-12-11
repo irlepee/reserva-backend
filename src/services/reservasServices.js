@@ -330,11 +330,21 @@ async function getRecommendations(userId) {
         Math.round((new Date(r.end_date) - new Date(r.start_date)) / (1000 * 60 * 60))
     );
     
+    let averageHour = Math.round(hoursArray.reduce((a, b) => a + b, 0) / hoursArray.length);
+    
+    // Si la hora promedio es menor o igual a la hora actual, ajustar a la siguiente hora disponible
+    const now = new Date();
+    const currentHour = now.getHours();
+    
+    if (averageHour <= currentHour) {
+        averageHour = Math.min(currentHour + 1, 23); // +1 hora, máximo 23:00
+    }
+    
     const patterns = {
         preferredSites: [...new Set(userPattern.map(r => r.Resource.belongs.name))],
         preferredResourceTypes: [...new Set(userPattern.map(r => r.Resource.type.name))],
         favoriteHours: hoursArray,
-        averageHour: Math.round(hoursArray.reduce((a, b) => a + b, 0) / hoursArray.length),
+        averageHour: averageHour,
         averageDuration: Math.round(durationHours.reduce((a, b) => a + b, 0) / durationHours.length) || 1,
         averageFrequency: userPattern.length / 20
     };
@@ -378,7 +388,7 @@ async function getRecommendations(userId) {
             id: r.id,
             name: r.name,
             type: r.type.name,
-            site: r.belongs.name,
+            site: r.belongs?.name || 'Sitio desconocido',  // Fallback si belongs es null
             suggestedHour: suggestedHour,
             suggestedDuration: patterns.averageDuration,
             isAvailable: isAvailable,
@@ -407,6 +417,7 @@ async function getBySite(siteId) {
                 select: {
                     id: true,
                     name: true,
+                    resource_type: true,
                 }
             },
             group: {
@@ -417,8 +428,6 @@ async function getBySite(siteId) {
             }
         }
     });
-
-    console.log("Reservas encontradas en getBySite:", reservas);
 
     const safeReservas = reservas.map(r => ({
         ...r,

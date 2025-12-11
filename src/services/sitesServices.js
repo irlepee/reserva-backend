@@ -155,10 +155,6 @@ async function getSiteById(siteId, userId) {
         id_owner: Number(site.id_owner)
     };
 
-    console.log('========== GET SITE BY ID RESPONSE ==========');
-    console.log(JSON.stringify(result, null, 2));
-    console.log('============================================');
-
     return result;
 }
 

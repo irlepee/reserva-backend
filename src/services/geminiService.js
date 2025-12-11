@@ -1,7 +1,14 @@
 const apiKey = process.env.GEMINI_API_KEY;
 const API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
 
-async function generateContent(prompt) {
+const MAX_RETRIES = 5;
+const RETRY_DELAY = 1000; // ms
+
+async function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function generateContent(prompt, retries = 0) {
   try {
     const response = await fetch(`${API_URL}?key=${apiKey}`, {
       method: 'POST',
@@ -16,13 +23,20 @@ async function generateContent(prompt) {
     });
 
     if (!response.ok) {
+      // Reintentar silenciosamente en errores 503 (Service Unavailable) y 429 (Too Many Requests)
+      if ((response.status === 503 || response.status === 429) && retries < MAX_RETRIES) {
+        const waitTime = RETRY_DELAY * (Math.pow(2, retries)); // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+        console.log(`API error ${response.status}. Esperando ${waitTime}ms antes de reintentar... (${retries + 1}/${MAX_RETRIES})`);
+        await delay(waitTime);
+        return generateContent(prompt, retries + 1);
+      }
       throw new Error(`API error: ${response.status}`);
     }
 
     const data = await response.json();
     return data.candidates[0].content.parts[0].text;
   } catch (error) {
-    console.error('Error en generateContent:', error);
+    // No relanzar error aquí, dejar que el llamador lo maneje
     throw error;
   }
 }
@@ -73,21 +87,38 @@ RESPUESTA (SOLO JSON, sin markdown):
 `;
 
   try {
+    console.log("=== ENVIANDO A GEMINI ===");
+    console.log("Prompt:", prompt.substring(0, 200) + "...");
+    
     const result = await generateContent(prompt);
+    console.log("=== RESPUESTA DE GEMINI ===");
+    console.log("Raw response:", result);
     
     // Extraer JSON de la respuesta
     const jsonMatch = result.match(/\[[\s\S]*\]/);
+    console.log("JSON Match found:", !!jsonMatch);
+    
     if (jsonMatch) {
+      console.log("JSON extraído:", jsonMatch[0]);
       const parsed = JSON.parse(jsonMatch[0]);
+      console.log("Parsed:", parsed);
+      console.log("Cantidad recomendaciones:", parsed.length);
+      
       // Asegurar máximo 3 recomendaciones y que duración sea en horas
       return parsed.slice(0, 3).map(r => ({
         ...r,
         suggestedDuration: Math.max(1, Math.round(r.suggestedDuration))
       }));
+      
+      console.log("Recomendaciones finales:", result);
+      return result;
     }
+    
+    console.log("No se encontró JSON en la respuesta");
     return [];
   } catch (error) {
-    console.error("Error al generar recomendaciones con Gemini:", error);
+    // Fallback silencioso: devolver array vacío sin logs de error
+    console.error("Error en generateRecommendations:", error.message);
     return [];
   }
 }
