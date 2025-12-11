@@ -5,7 +5,7 @@ async function getAllReservas(req, res) {
         const newReserva = await reservasServices.getAllMyReservas(req.user.userId);
         res.status(200).json(newReserva);
     } catch (error) {
-        res.status(500).json({ error : error.message });
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -15,7 +15,7 @@ async function create(req, res) {
         const newReserva = await reservasServices.createReserva(reservaData, req.user.userId);
         res.status(200).json(newReserva);
     } catch (error) {
-        res.status(500).json({ error : error.message });
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -25,7 +25,7 @@ async function cancel(req, res) {
         const cancelledReserva = await reservasServices.cancelReserva(reservaData, req.user.userId);
         res.status(200).json(cancelledReserva);
     } catch (error) {
-        res.status(500).json({ error : error.message });
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -82,4 +82,43 @@ async function getOccupiedHours(req, res) {
     }
 }
 
-module.exports = { getAllReservas, create, cancel, history, topSites, getSites, getResources, getOccupiedHours }
+async function getRecommendations(req, res) {
+
+    try {
+        const userId = req.user.userId;
+        const recommendations = await reservasServices.getRecommendations(userId);
+        res.status(200).json({ recommendations });
+    } catch (error) {
+        res.status(500).json({ error: error.message });   
+    }
+
+}
+
+async function quickReserveFromRecommendation(req, res) {
+    try {
+        const { resourceId, suggestedHour, suggestedDuration } = req.body;
+        const userId = req.user.userId;
+
+        // Crear la reserva automáticamente
+        const today = new Date();
+        today.setHours(suggestedHour, 0, 0, 0);
+        
+        const startDate = today;
+        const endDate = new Date(startDate.getTime() + suggestedDuration * 60 * 60 * 1000);
+
+        const reservaData = {
+            id_owner: BigInt(userId),
+            id_resource: parseInt(resourceId),
+            start_date: startDate,
+            end_date: endDate,
+            status: "confirmada"
+        };
+
+        const newReserva = await reservasServices.createReserva(reservaData, userId);
+        res.status(200).json({ message: "Reserva creada desde recomendación", reserva: newReserva });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+module.exports = { getAllReservas, create, cancel, history, topSites, getSites, getResources, getOccupiedHours, getRecommendations, quickReserveFromRecommendation }

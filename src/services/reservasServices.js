@@ -133,7 +133,7 @@ async function reservasHistory(userId) {
 
     const history = await prisma.Reserva.findMany({
         where: { id_owner: BigInt(userId) },
-        orderBy: { date_reserved: "desc" }
+        orderBy: { created_at: "desc" }
     })
 
     const safeHistory = history.map(h => ({
@@ -303,4 +303,95 @@ async function getOccupiedHours(resourceId, date) {
     };
 }
 
-module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory, topReservedSites, getSites, getResources, getOccupiedHours }
+async function getRecommendations(userId) {
+    // Obtener últimas 20 reservas del usuario
+    const userPattern = await prisma.Reserva.findMany({
+        where: { id_owner: BigInt(userId) },
+        take: 20,
+        orderBy: { created_at: 'desc' },
+        include: { 
+            Resource: { 
+                include: { 
+                    belongs: true,
+                    type: true
+                } 
+            } 
+        }
+    });
+
+    // Si no tiene reservas, retornar array vacío
+    if (userPattern.length === 0) {
+        return [];
+    }
+
+    // Extraer patrones de las reservas
+    const hoursArray = userPattern.map(r => new Date(r.start_date).getHours());
+    const durationHours = userPattern.map(r => 
+        Math.round((new Date(r.end_date) - new Date(r.start_date)) / (1000 * 60 * 60))
+    );
+    
+    const patterns = {
+        preferredSites: [...new Set(userPattern.map(r => r.Resource.belongs.name))],
+        preferredResourceTypes: [...new Set(userPattern.map(r => r.Resource.type.name))],
+        favoriteHours: hoursArray,
+        averageHour: Math.round(hoursArray.reduce((a, b) => a + b, 0) / hoursArray.length),
+        averageDuration: Math.round(durationHours.reduce((a, b) => a + b, 0) / durationHours.length) || 1,
+        averageFrequency: userPattern.length / 20
+    };
+
+    // Obtener recursos relevantes solo de sus sitios favoritos
+    const relevantResources = await prisma.Resource.findMany({
+        where: {
+            belongs: {
+                name: { in: patterns.preferredSites }
+            }
+        },
+        include: { 
+            belongs: true,
+            type: true,
+            reserva: {
+                select: { start_date: true, end_date: true }
+            }
+        },
+        take: 10
+    });
+
+    // Función para verificar si una hora está disponible
+    function isTimeAvailable(resource, hour, durationHours) {
+        const testStart = new Date();
+        testStart.setHours(hour, 0, 0, 0);
+        const testEnd = new Date(testStart.getTime() + durationHours * 60 * 60 * 1000);
+
+        return !resource.reserva.some(r => {
+            const rStart = new Date(r.start_date);
+            const rEnd = new Date(r.end_date);
+            return testStart < rEnd && testEnd > rStart;
+        });
+    }
+
+    // Preparar recursos con disponibilidad y horarios sugeridos
+    const resourcesWithDetails = relevantResources.map(r => {
+        const suggestedHour = patterns.averageHour;
+        const isAvailable = isTimeAvailable(r, suggestedHour, patterns.averageDuration);
+        
+        return {
+            id: r.id,
+            name: r.name,
+            type: r.type.name,
+            site: r.belongs.name,
+            suggestedHour: suggestedHour,
+            suggestedDuration: patterns.averageDuration,
+            isAvailable: isAvailable,
+            currentReservations: r.reserva?.length || 0
+        };
+    });
+
+    // Enviar a Gemini
+    const { generateRecommendations: geminiRecommendations } = require('./geminiService');
+    const recommendations = await geminiRecommendations(patterns, resourcesWithDetails);
+
+    // Retornar máximo 3 recomendaciones
+    return recommendations.slice(0, 3);
+}
+
+module.exports = { getAllMyReservas, createReserva, cancelReserva, reservasHistory, topReservedSites, getSites, getResources, getOccupiedHours, getRecommendations }

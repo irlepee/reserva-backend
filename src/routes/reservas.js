@@ -14,4 +14,7 @@ Router.get('/sites/:siteId', reservasController.getResources);
 
 Router.get('/resources/:resourceId/occupied', reservasController.getOccupiedHours);
 
+Router.get('/recommend', authMiddleware.jwtauthenticator, reservasController.getRecommendations);
+Router.post('/recommend/quick-reserve', authMiddleware.jwtauthenticator, reservasController.quickReserveFromRecommendation);
+
 module.exports = Router;
