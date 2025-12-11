@@ -1,4 +1,17 @@
 const sitesService = require('../services/sitesServices');
+const path = require('path');
+const fs = require('fs');
+
+function deleteFileIfExists(filePath) {
+    const fullPath = path.join(__dirname, '..', filePath);
+    if (fs.existsSync(fullPath)) {
+        try {
+            fs.unlinkSync(fullPath);
+        } catch (err) {
+            console.error(`Error deleting file ${fullPath}:`, err);
+        }
+    }
+}
 
 async function getSites(req, res) {
     try {
@@ -13,9 +26,24 @@ async function create(req, res) {
     try {
         const siteData = req.body;
 
+        // Si images llega como string JSON, parsearlo
+        if (siteData.images && typeof siteData.images === 'string') {
+            siteData.images = JSON.parse(siteData.images);
+        }
+
         // Si hay imágenes subidas
         if (req.files && req.files.length > 0) {
-            siteData.newImages = req.files.map(file => `/uploads/sites/${file.filename}`);
+            siteData.images = req.files.map(file => `/uploads/sites/${file.filename}`);
+        }
+
+        // Validar máximo 3 imágenes
+        if (siteData.images && siteData.images.length > 3) {
+            // Eliminar archivos excedentes del servidor
+            for (let i = 3; i < req.files.length; i++) {
+                deleteFileIfExists(`/uploads/sites/${req.files[i].filename}`);
+            }
+            // Mantener solo las primeras 3
+            siteData.images = siteData.images.slice(0, 3);
         }
 
         const newSite = await sitesService.createSite(siteData, req.user.userId);
@@ -30,10 +58,45 @@ async function edit(req, res) {
         const siteId = parseInt(req.params.siteId);
         const siteData = req.body;
 
-        // Si hay imágenes nuevas subidas
-        if (req.files && req.files.length > 0) {
-            siteData.newImages = req.files.map(file => `/uploads/sites/${file.filename}`);
+        // Parsear existingImages si llega como string JSON
+        let imagesToKeep = [];
+        if (siteData.existingImages) {
+            if (typeof siteData.existingImages === 'string') {
+                imagesToKeep = JSON.parse(siteData.existingImages);
+            } else if (Array.isArray(siteData.existingImages)) {
+                imagesToKeep = siteData.existingImages;
+            }
         }
+
+        // Obtener imágenes actuales del sitio
+        const currentSite = await sitesService.getSiteByIdForFileCleanup(siteId, req.user.userId);
+        const currentImages = currentSite && currentSite.images ? currentSite.images : [];
+
+        // Eliminar solo archivos que NO están en existingImages
+        currentImages.forEach(imagePath => {
+            if (!imagesToKeep.includes(imagePath)) {
+                deleteFileIfExists(imagePath);
+            }
+        });
+
+        // Si hay imágenes nuevas subidas, agregarlas a las existentes
+        let finalImages = [...imagesToKeep];
+        if (req.files && req.files.length > 0) {
+            const newImages = req.files.map(file => `/uploads/sites/${file.filename}`);
+            finalImages = [...imagesToKeep, ...newImages];
+        }
+
+        // Validar máximo 3 imágenes
+        if (finalImages.length > 3) {
+            // Eliminar las excedentes del disco
+            for (let i = 3; i < finalImages.length; i++) {
+                deleteFileIfExists(finalImages[i]);
+            }
+            // Mantener solo 3
+            finalImages = finalImages.slice(0, 3);
+        }
+
+        siteData.images = finalImages;
 
         const updateSite = await sitesService.editSite(siteId, siteData, req.user.userId);
         res.status(200).json(updateSite);

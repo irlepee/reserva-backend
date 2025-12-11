@@ -25,11 +25,9 @@ async function createSite(siteData, userId) {
             id_entidad: siteData.id_entidad ? parseInt(siteData.id_entidad) : null,
             id_municipio: siteData.id_municipio ? parseInt(siteData.id_municipio) : null,
             id_localidad: siteData.id_localidad ? parseInt(siteData.id_localidad) : null,
-            images: siteData.images || []  // Añadir imágenes si existen
+            images: siteData.images || []
         },
     });
-
-    console.log('Service: Site created with ID:', newSite.id);
 
     const safeSite = {
         ...newSite,
@@ -43,34 +41,48 @@ async function editSite(siteId, siteData, userId) {
 
     await isOwner(siteId, userId);
 
-    console.log('Service: Editing site:', siteId, 'with data:', {
-        name: siteData.name,
-        description: siteData.description,
-        imagesCount: siteData.images?.length || 0
-    });
+    const updateData = {};
 
-    const updateData = {
-        name: siteData.name,
-        description: siteData.description,
-        id_entidad: siteData.id_entidad ? parseInt(siteData.id_entidad) : null,
-        id_municipio: siteData.id_municipio ? parseInt(siteData.id_municipio) : null,
-        id_localidad: siteData.id_localidad ? parseInt(siteData.id_localidad) : null,
-    };
+    if (siteData.name !== undefined && siteData.name !== '') {
+        updateData.name = siteData.name;
+    }
 
-    // Si hay imágenes nuevas, reemplazar. Si no, mantener las existentes
-    if (siteData.images && siteData.images.length > 0) {
-        updateData.images = siteData.images;
-        console.log('Service: Updating images:', updateData.images);
-    } else {
-        console.log('Service: No new images, keeping existing ones');
+    if (siteData.description !== undefined && siteData.description !== '') {
+        updateData.description = siteData.description;
+    }
+
+    if (siteData.id_entidad !== undefined && siteData.id_entidad !== '') {
+        const parsedId = parseInt(siteData.id_entidad);
+        if (!isNaN(parsedId)) {
+            updateData.id_entidad = parsedId;
+        }
+    }
+
+    if (siteData.id_municipio !== undefined && siteData.id_municipio !== '') {
+        const parsedId = parseInt(siteData.id_municipio);
+        if (!isNaN(parsedId)) {
+            updateData.id_municipio = parsedId;
+        }
+    }
+
+    if (siteData.id_localidad !== undefined && siteData.id_localidad !== '') {
+        const parsedId = parseInt(siteData.id_localidad);
+        if (!isNaN(parsedId)) {
+            updateData.id_localidad = parsedId;
+        }
+    }
+
+    // Si hay imágenes en siteData, actualizar (reemplazar completamente)
+    if (siteData.images !== undefined) {
+        // Asegurar que sea array y máximo 3
+        const imagesToSave = Array.isArray(siteData.images) ? siteData.images.slice(0, 3) : [];
+        updateData.images = imagesToSave;
     }
 
     const updatedSite = await prisma.Site.update({
         where: { id: siteId },
         data: updateData,
     });
-
-    console.log('Service: Site updated successfully');
 
     const safeSite = {
         ...updatedSite,
@@ -138,10 +150,32 @@ async function getSiteById(siteId, userId) {
         throw new Error('Site not found');
     }
 
-    return {
+    const result = {
         ...site,
         id_owner: Number(site.id_owner)
     };
+
+    console.log('========== GET SITE BY ID RESPONSE ==========');
+    console.log(JSON.stringify(result, null, 2));
+    console.log('============================================');
+
+    return result;
+}
+
+// Función auxiliar para obtener sitio sin mostrar logs (para limpieza de archivos)
+async function getSiteByIdForFileCleanup(siteId, userId) {
+    const site = await prisma.Site.findFirst({
+        where: {
+            id: siteId,
+            id_owner: BigInt(userId)
+        }
+    });
+
+    if (!site) {
+        throw new Error('Site not found');
+    }
+
+    return site;
 }
 
 async function getResourceCategories() {
@@ -342,4 +376,4 @@ async function getSiteStats(siteId, userId) {
     };
 }
 
-module.exports = { getMySites, createSite, editSite, deleteSite, getSiteById, getResourceCategories, getSiteStats };
+module.exports = { getMySites, createSite, editSite, deleteSite, getSiteById, getResourceCategories, getSiteStats, getSiteByIdForFileCleanup };
