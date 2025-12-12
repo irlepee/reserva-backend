@@ -1,4 +1,4 @@
-const apiKey = 'AIzaSyBzRLD2sxCJ-23k0k4hNsRfg23U7adW5rI';
+const apiKey = 'AIzaSyC-nS1ehfXp3iVbBBIZTlNTNYdzYJ4jE0k';
 const API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
 
 const MAX_RETRIES = 5;
