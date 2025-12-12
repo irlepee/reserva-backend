@@ -17,6 +17,7 @@ async function getMySites(userId) {
 
 async function createSite(siteData, userId) {
 
+
     const newSite = await prisma.Site.create({
         data: {
             id_owner: BigInt(userId),
@@ -25,7 +26,9 @@ async function createSite(siteData, userId) {
             id_entidad: siteData.id_entidad ? parseInt(siteData.id_entidad) : null,
             id_municipio: siteData.id_municipio ? parseInt(siteData.id_municipio) : null,
             id_localidad: siteData.id_localidad ? parseInt(siteData.id_localidad) : null,
-            images: siteData.images || []
+            images: siteData.images || [],
+            opening_hour: siteData.opening_hour || '',
+            closing_hour: siteData.closing_hour || ''
         },
     });
 
@@ -72,11 +75,20 @@ async function editSite(siteId, siteData, userId) {
         }
     }
 
+
     // Si hay imágenes en siteData, actualizar (reemplazar completamente)
     if (siteData.images !== undefined) {
         // Asegurar que sea array y máximo 3
         const imagesToSave = Array.isArray(siteData.images) ? siteData.images.slice(0, 3) : [];
         updateData.images = imagesToSave;
+    }
+
+    // Manejar opening_hour y closing_hour como string
+    if (typeof siteData.opening_hour === 'string') {
+        updateData.opening_hour = siteData.opening_hour;
+    }
+    if (typeof siteData.closing_hour === 'string') {
+        updateData.closing_hour = siteData.closing_hour;
     }
 
     const updatedSite = await prisma.Site.update({
@@ -152,9 +164,10 @@ async function getSiteById(siteId, userId) {
 
     const result = {
         ...site,
-        id_owner: Number(site.id_owner)
+        id_owner: Number(site.id_owner),
+        opening_hour: site.opening_hour,
+        closing_hour: site.closing_hour
     };
-
     return result;
 }
 

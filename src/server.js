@@ -1,5 +1,5 @@
-const app = require('./app');
 require('dotenv').config({ path: '../.env' });
+const app = require('./app');
 const { initializeCronJobs } = require('./services/cronJobs');
 
 const PORT = process.env.PORT;

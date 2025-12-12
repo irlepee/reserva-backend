@@ -76,6 +76,8 @@ model Site {
   id_municipio Int?
   id_localidad Int?
   images       String[] @default([])
+  opening_hour String?
+  closing_hour String?
 
   owner        User     @relation(fields: [id_owner], references: [id])
   resources    Resource[]

@@ -46,6 +46,10 @@ async function create(req, res) {
             siteData.images = siteData.images.slice(0, 3);
         }
 
+        // Pasar opening_hour y closing_hour si llegan
+        if (req.body.opening_hour) siteData.opening_hour = req.body.opening_hour;
+        if (req.body.closing_hour) siteData.closing_hour = req.body.closing_hour;
+
         const newSite = await sitesService.createSite(siteData, req.user.userId);
         res.status(201).json(newSite);
     } catch (error) {
@@ -97,6 +101,10 @@ async function edit(req, res) {
         }
 
         siteData.images = finalImages;
+
+        // Pasar opening_hour y closing_hour si llegan
+        if (req.body.opening_hour) siteData.opening_hour = req.body.opening_hour;
+        if (req.body.closing_hour) siteData.closing_hour = req.body.closing_hour;
 
         const updateSite = await sitesService.editSite(siteId, siteData, req.user.userId);
         res.status(200).json(updateSite);

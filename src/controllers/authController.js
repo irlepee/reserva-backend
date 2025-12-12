@@ -23,11 +23,14 @@ async function register(req, res) {
 async function login(req, res) {
 
     const { identifier, password } = req.body;
+    console.log('[LOGIN] Intento de login:', { identifier, passwordLength: password ? password.length : 0 });
 
     try {
         const result = await authService.loginUser(identifier, password);
+        console.log('[LOGIN] Login exitoso para:', identifier);
         res.status(200).json(result);
     } catch (error) {
+        console.error('[LOGIN] Error en login:', error.message);
         res.status(401).json({ error: error.message });
     }
 }
