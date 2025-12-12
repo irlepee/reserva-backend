@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Group" ALTER COLUMN "id_owner" SET DATA TYPE BIGINT;
-
--- AlterTable
-ALTER TABLE "User" ALTER COLUMN "gender" SET DATA TYPE CHAR;

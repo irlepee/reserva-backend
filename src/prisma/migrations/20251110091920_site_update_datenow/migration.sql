@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Site" ALTER COLUMN "date_created" SET DEFAULT CURRENT_TIMESTAMP;
-
--- AlterTable
-ALTER TABLE "User" ALTER COLUMN "gender" SET DATA TYPE CHAR;

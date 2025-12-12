@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "Resource" ALTER COLUMN "status" SET DATA TYPE TEXT;
-
--- AlterTable
-ALTER TABLE "User" ALTER COLUMN "gender" SET DATA TYPE CHAR;
