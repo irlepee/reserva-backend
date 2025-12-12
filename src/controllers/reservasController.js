@@ -40,7 +40,8 @@ async function history(req, res) {
 
 async function topSites(req, res) {
     try {
-        const result = await reservasServices.topReservedSites(req.user.userId);
+        const scope = req.query.scope || 'user'; // 'user' or 'global'
+        const result = await reservasServices.topReservedSites(req.user.userId, scope);
         res.status(200).json(result);
     } catch (error) {
         res.status(500).json({ error: error.message })

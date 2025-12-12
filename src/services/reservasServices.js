@@ -186,48 +186,33 @@ function validateHour(dateString) {
 }
 
 async function topReservedSites(userId) {
+    // now, weekAgo, monthAgo
     const now = new Date();
-
-    // Fechas de referencia
     const weekAgo = new Date();
     weekAgo.setDate(now.getDate() - 7);
-
     const monthAgo = new Date();
     monthAgo.setMonth(now.getMonth() - 1);
 
-    // --- RESERVAS SEMANA ---
-    const weekReservations = await prisma.Reserva.findMany({
-        where: {
-            id_owner: BigInt(userId),
-            start_date: { gte: weekAgo }
-        },
-        select: { id_resource: true }
-    });
+    async function getReservations(sinceDate, scope) {
+        const where = {
+            start_date: { gte: sinceDate }
+        };
+        if (scope === 'user') {
+            where.id_owner = BigInt(userId);
+        }
+        const res = await prisma.Reserva.findMany({ where, select: { id_resource: true } });
+        return res;
+    }
+    
+    async function computeTop(reservations, topN = 3) {
+        if (!reservations || reservations.length === 0) return [];
 
-    // --- RESERVAS MES ---
-    const monthReservations = await prisma.Reserva.findMany({
-        where: {
-            id_owner: BigInt(userId),
-            start_date: { gte: monthAgo }
-        },
-        select: { id_resource: true }
-    });
+        const resourceIds = [...new Set(reservations.map(r => r.id_resource))];
+        if (resourceIds.length === 0) return [];
 
-    // Obtener todos los recursos usados en semana y mes
-    const allResourceIds = [
-        ...weekReservations.map(r => r.id_resource),
-        ...monthReservations.map(r => r.id_resource)
-    ];
-    const resources = await prisma.Resource.findMany({
-        where: { id: { in: allResourceIds } },
-        select: { id: true, id_site: true }
-    });
+        const resources = await prisma.Resource.findMany({ where: { id: { in: resourceIds } }, select: { id: true, id_site: true } });
+        const resourceToSite = new Map(resources.map(r => [r.id, r.id_site]));
 
-    // Mapear id_resource → id_site
-    const resourceToSite = new Map(resources.map(r => [r.id, r.id_site]));
-
-    // Contar repeticiones por sitio
-    function countTop(reservations) {
         const siteCount = {};
         reservations.forEach(r => {
             const siteId = resourceToSite.get(r.id_resource);
@@ -235,13 +220,28 @@ async function topReservedSites(userId) {
                 siteCount[siteId] = (siteCount[siteId] || 0) + 1;
             }
         });
-        const topEntry = Object.entries(siteCount).sort((a, b) => b[1] - a[1])[0];
-        return topEntry ? { id_site: Number(topEntry[0]), count: topEntry[1] } : null;
+
+        const entries = Object.entries(siteCount).map(([siteId, count]) => ({ id_site: Number(siteId), count }));
+        entries.sort((a, b) => b.count - a.count);
+
+        const topEntries = entries.slice(0, topN);
+        if (topEntries.length === 0) return [];
+
+        const siteIds = topEntries.map(e => e.id_site);
+        const sites = await prisma.Site.findMany({ where: { id: { in: siteIds } } });
+        const siteMap = new Map(sites.map(s => [s.id, s]));
+
+        return topEntries.map(e => ({ site: siteMap.get(e.id_site) || { id: e.id_site }, count: e.count }));
     }
 
-    return {
-        week: countTop(weekReservations),
-        month: countTop(monthReservations)
+    return async function(scope = 'user') {
+        const weekReservations = await getReservations(weekAgo, scope);
+        const monthReservations = await getReservations(monthAgo, scope);
+
+        const weekTop = await computeTop(weekReservations, 3);
+        const monthTop = await computeTop(monthReservations, 3);
+
+        return { week: weekTop, month: monthTop };
     };
 }
 
