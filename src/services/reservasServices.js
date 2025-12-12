@@ -208,7 +208,7 @@ function validateHour(dateString) {
     return d;
 }
 
-async function topReservedSites(userId) {
+async function topReservedSites(userId, scope = 'user') {
     // now, weekAgo, monthAgo
     const now = new Date();
     const weekAgo = new Date();
@@ -216,7 +216,9 @@ async function topReservedSites(userId) {
     const monthAgo = new Date();
     monthAgo.setMonth(now.getMonth() - 1);
 
-    async function getReservations(sinceDate, scope) {
+    console.log('TOP RESERVED SITES - Calculating for userId:', userId, 'scope:', scope);
+
+    async function getReservations(sinceDate) {
         const where = {
             start_date: { gte: sinceDate }
         };
@@ -226,6 +228,8 @@ async function topReservedSites(userId) {
         const res = await prisma.Reserva.findMany({ where, select: { id_resource: true } });
         return res;
     }
+
+    console.log('TOP RESERVED SITES - Fetched reservations');
 
     async function computeTop(reservations, topN = 3) {
         if (!reservations || reservations.length === 0) return [];
@@ -244,6 +248,8 @@ async function topReservedSites(userId) {
             }
         });
 
+        console.log('TOP RESERVED SITES - Computed site counts:', siteCount);
+
         const entries = Object.entries(siteCount).map(([siteId, count]) => ({ id_site: Number(siteId), count }));
         entries.sort((a, b) => b.count - a.count);
 
@@ -257,15 +263,14 @@ async function topReservedSites(userId) {
         return topEntries.map(e => ({ site: siteMap.get(e.id_site) || { id: e.id_site }, count: e.count }));
     }
 
-    return async function(scope = 'user') {
-        const weekReservations = await getReservations(weekAgo, scope);
-        const monthReservations = await getReservations(monthAgo, scope);
+    const weekReservations = await getReservations(weekAgo);
+    const monthReservations = await getReservations(monthAgo);
 
-        const weekTop = await computeTop(weekReservations, 3);
-        const monthTop = await computeTop(monthReservations, 3);
+    const weekTop = await computeTop(weekReservations, 3);
+    const monthTop = await computeTop(monthReservations, 3);
 
-        return { week: weekTop, month: monthTop };
-    };
+    console.log('TOP RESERVED SITES RESULT:', { week: weekTop, month: monthTop });
+    return { week: weekTop, month: monthTop };
 }
 
 async function getSites() {
