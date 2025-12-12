@@ -41,4 +41,7 @@ app.use('/', locationsRoutes);
 const reportesRoutes = require('./routes/reportes');
 app.use('/reportes', reportesRoutes);
 
+const notificationsRoutes = require('./routes/notifications');
+app.use('/notifications', notificationsRoutes);
+
 module.exports = app;

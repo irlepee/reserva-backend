@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const notificationsService = require('./notificationsService');
 //const { id } = require('zod/locales');
 
 // DEVUELVE LAS RESERVAS ACTIVAS Y EN CURSO
@@ -103,6 +104,19 @@ async function createReserva(reservaData, userId) {
         id_owner: Number(newReserva.id_owner)
     }
 
+    // Emitir notificación
+    const resource = await prisma.Resource.findUnique({ where: { id: reservaData.id_resource }, include: { belongs: true } });
+    const resourceName = resource?.name || 'Recurso desconocido';
+    const siteName = resource?.belongs?.name || 'Sitio desconocido';
+
+    await notificationsService.createNotification(
+        userId,
+        'reserva_created',
+        'Reserva confirmada',
+        `Tu reserva en "${siteName}" - ${resourceName} fue creada exitosamente`,
+        { reservaId: Number(newReserva.id), resourceId: reservaData.id_resource, siteId: resource?.id_site }
+    );
+
     return safeReserva;
 }
 
@@ -128,6 +142,15 @@ async function cancelReserva(reservaId, userId) {
         id: Number(cancelledReserva.id),
         id_owner: Number(cancelledReserva.id_owner)
     }
+
+    // Emitir notificación de cancelación
+    await notificationsService.createNotification(
+        userId,
+        'reserva_cancelled_admin',
+        'Reserva cancelada',
+        'Tu reserva fue cancelada',
+        { reservaId: Number(cancelledReserva.id) }
+    );
 
     return safeReserva;
 }
@@ -203,7 +226,7 @@ async function topReservedSites(userId) {
         const res = await prisma.Reserva.findMany({ where, select: { id_resource: true } });
         return res;
     }
-    
+
     async function computeTop(reservations, topN = 3) {
         if (!reservations || reservations.length === 0) return [];
 

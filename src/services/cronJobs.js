@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { PrismaClient } = require('@prisma/client');
+const { checkReservationReminders } = require('./reservationRemindersService');
 const prisma = new PrismaClient();
 
 // Función para actualizar estados de reservas
@@ -82,7 +83,11 @@ function initializeCronJobs() {
     // Ejecutar cada 5 minutos
     const task = cron.schedule('*/5 * * * *', updateReservaStatuses);
 
+    // Ejecutar chequeo de recordatorios cada 1 minuto
+    const reminderTask = cron.schedule('* * * * *', checkReservationReminders);
+
     console.log('[CRON] ✓ Cron job configurado: Actualizar estados cada 5 minutos');
+    console.log('[CRON] ✓ Cron job configurado: Chequear recordatorios cada 1 minuto');
     console.log('[CRON] Próxima ejecución en 5 minutos');
 
     return task;

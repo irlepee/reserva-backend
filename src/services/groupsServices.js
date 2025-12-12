@@ -1,6 +1,7 @@
 const { PrismaClient } = require('@prisma/client');
 const { success } = require('zod');
 const { id } = require('zod/locales');
+const notificationsService = require('./notificationsService');
 const prisma = new PrismaClient();
 
 async function getMyGroups(userId) {
@@ -240,18 +241,32 @@ async function inviteMembersToGroup(groupId, users, userId) {
 
     await isOwnedByUser(groupId, userId);
 
+    // Obtener info del grupo
+    const group = await prisma.Group.findUnique({ where: { id: groupId } });
+
     // Convertir a array si es necesario
     const usersList = Array.isArray(users) ? users : [users];
 
     try {
         // Intentar insertar con skipDuplicates para ignorar ya invitados
         const invitations = await prisma.Invitation.createMany({
-            data: usersList.map(userId => ({
-                id_user: userId,
+            data: usersList.map(invitedUserId => ({
+                id_user: invitedUserId,
                 id_group: groupId
             })),
             skipDuplicates: true  // Ignora registros que violarían unique constraint
         });
+
+        // Emitir notificaciones a los usuarios invitados
+        for (const invitedUserId of usersList) {
+            await notificationsService.createNotification(
+                invitedUserId,
+                'invitation_received',
+                `Invitación al grupo: ${group.name}`,
+                `Fuiste invitado a unirte al grupo "${group.name}"`,
+                { groupId, groupName: group.name }
+            );
+        }
 
         return {
             success: true,
@@ -270,7 +285,8 @@ async function acceptInvitationToGroup(data, userId) {
         where: {
             id_user: userId,
             id_group: data.groupId
-        }
+        },
+        include: { group: true }
     });
 
     if (!invitation) {
@@ -295,6 +311,16 @@ async function acceptInvitationToGroup(data, userId) {
         }
     });
 
+    // Notificar al propietario que la invitación fue aceptada
+    const groupOwner = invitation.group.id_owner;
+    await notificationsService.createNotification(
+        Number(groupOwner),
+        'invitation_accepted',
+        `Invitación aceptada: ${invitation.group.name}`,
+        `Un usuario aceptó la invitación al grupo "${invitation.group.name}"`,
+        { groupId: data.groupId, groupName: invitation.group.name }
+    );
+
     return { success: true, message: 'Invitation accepted and member added to group' };
 }
 
@@ -304,7 +330,8 @@ async function declineInvitationToGroup(data, userId) {
         where: {
             id_user: userId,
             id_group: data.id_group
-        }
+        },
+        include: { group: true }
     });
 
     if (!invitation) {
@@ -320,6 +347,16 @@ async function declineInvitationToGroup(data, userId) {
         }
     });
 
+    // Notificar al propietario que la invitación fue rechazada
+    const groupOwner = invitation.group.id_owner;
+    await notificationsService.createNotification(
+        Number(groupOwner),
+        'invitation_rejected',
+        `Invitación rechazada: ${invitation.group.name}`,
+        `Un usuario rechazó la invitación al grupo "${invitation.group.name}"`,
+        { groupId: data.id_group, groupName: invitation.group.name }
+    );
+
     return { success: true, message: 'Invitation declined successfully' };
 
 }
@@ -327,6 +364,8 @@ async function declineInvitationToGroup(data, userId) {
 async function removeMemberFromGroup(groupId, memberId, userId) {
 
     await isOwnedByUser(groupId, userId);
+
+    const group = await prisma.Group.findUnique({ where: { id: groupId } });
 
     await prisma.UserGroup.delete({
         where: {
@@ -336,6 +375,15 @@ async function removeMemberFromGroup(groupId, memberId, userId) {
             }
         }
     });
+
+    // Notificar al miembro que fue removido
+    await notificationsService.createNotification(
+        memberId,
+        'group_member_removed',
+        `Removido del grupo: ${group.name}`,
+        `Fuiste removido del grupo "${group.name}"`,
+        { groupId, groupName: group.name }
+    );
 
     return { success: true, message: 'Member removed successfully' };
 

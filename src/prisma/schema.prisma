@@ -76,8 +76,8 @@ model Site {
   id_municipio Int?
   id_localidad Int?
   images       String[] @default([])
-  opening_hour String?
-  closing_hour String?
+  opening_hour String
+  closing_hour String
 
   owner        User     @relation(fields: [id_owner], references: [id])
   resources    Resource[]
@@ -107,6 +107,7 @@ model User {
   resource          Reserva[]
   Invitation        Invitation[]
   userGroups        UserGroup[] @relation("UserToGroups")
+  notifications     Notification[]
 }
 
 model UserGroup {
@@ -116,6 +117,30 @@ model UserGroup {
   user     User   @relation("UserToGroups", fields: [id_user], references: [id])
 
   @@id([id_user, id_group])
+}
+
+model NotificationType {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique @db.VarChar(50)
+  description String?
+
+  notifications Notification[]
+}
+
+model Notification {
+  id               BigInt           @id @default(autoincrement())
+  id_user          BigInt
+  id_type          Int
+  title            String           @db.VarChar(255)
+  body             String?
+  data             Json?
+  read             Boolean          @default(false)
+  createdAt        DateTime         @default(now())
+
+  user             User   @relation(fields: [id_user], references: [id], onDelete: Cascade)
+  type             NotificationType @relation(fields: [id_type], references: [id])
+
+  @@index([id_user, read, createdAt])
 }
 
 model Entidad {
